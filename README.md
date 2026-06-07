@@ -1,8 +1,20 @@
+---
+title: MindGuard
+emoji: 🛡️
+colorFrom: blue
+colorTo: green
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # MindGuard — AI-Powered Mental Health Screening from Text
 
 > Early detection of depression, anxiety, and stress through NLP analysis of user-written text, with an empathetic RAG-powered chatbot for support.
 
-**Live Demo:** [Coming Soon]
+**Live Demo:** [https://huggingface.co/spaces/MallikaV/MindGuard](https://huggingface.co/spaces/MallikaV/MindGuard)
 
 ## Problem Statement
 
