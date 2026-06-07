@@ -62,7 +62,7 @@ def classify_text(text: str) -> dict:
 def screen_mental_health(text: str):
     """Main screening function for Gradio interface."""
     if not text or len(text.strip()) < 10:
-        return "Please write at least 10 characters about how you're feeling.", "", {}
+        return "Please write at least 10 characters about how you're feeling.", ""
 
     classification = classify_text(text)
     response = rag_pipeline.generate_response(text, classification)
@@ -94,7 +94,7 @@ def screen_mental_health(text: str):
 | Severe | {classification['probabilities']['severe']*100:.1f}% |
 """
 
-    return result_text, response, classification["probabilities"]
+    return result_text, response
 
 
 def chat_response(message: str, history: list):
@@ -142,11 +142,10 @@ with gr.Blocks(
                     result_output = gr.Markdown(label="Result")
                     response_output = gr.Textbox(label="AI Support Response", lines=5, interactive=False)
 
-            probs_output = gr.Label(label="Detection Probabilities", num_top_classes=5)
             screen_btn.click(
                 screen_mental_health,
                 inputs=[text_input],
-                outputs=[result_output, response_output, probs_output],
+                outputs=[result_output, response_output],
             )
 
             gr.Examples(
@@ -161,7 +160,7 @@ with gr.Blocks(
 
         with gr.Tab("💬 Chat"):
             gr.Markdown("### Empathetic AI Companion — powered by RAG pipeline")
-            chatbot_display = gr.Chatbot(height=400)
+            chatbot_display = gr.Chatbot(height=400, type="messages")
             chat_input = gr.Textbox(placeholder="Share how you're feeling...", label="Your message")
             chat_btn = gr.Button("Send", variant="primary")
 
@@ -169,7 +168,10 @@ with gr.Blocks(
                 if not message.strip():
                     return history, ""
                 response = chat_response(message, history)
-                history = history + [[message, response]]
+                history = history + [
+                    {"role": "user", "content": message},
+                    {"role": "assistant", "content": response},
+                ]
                 return history, ""
 
             chat_btn.click(handle_chat, [chat_input, chatbot_display], [chatbot_display, chat_input])
