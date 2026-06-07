@@ -161,13 +161,19 @@ with gr.Blocks(
 
         with gr.Tab("💬 Chat"):
             gr.Markdown("### Empathetic AI Companion — powered by RAG pipeline")
-            chatbot = gr.ChatInterface(
-                chat_response,
-                chatbot=gr.Chatbot(height=400),
-                textbox=gr.Textbox(placeholder="Share how you're feeling...", container=False),
-                retry_btn=None,
-                undo_btn=None,
-            )
+            chatbot_display = gr.Chatbot(height=400)
+            chat_input = gr.Textbox(placeholder="Share how you're feeling...", label="Your message")
+            chat_btn = gr.Button("Send", variant="primary")
+
+            def handle_chat(message, history):
+                if not message.strip():
+                    return history, ""
+                response = chat_response(message, history)
+                history = history + [[message, response]]
+                return history, ""
+
+            chat_btn.click(handle_chat, [chat_input, chatbot_display], [chatbot_display, chat_input])
+            chat_input.submit(handle_chat, [chat_input, chatbot_display], [chatbot_display, chat_input])
 
         with gr.Tab("ℹ️ About"):
             gr.Markdown("""
