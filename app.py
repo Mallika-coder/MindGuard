@@ -1216,6 +1216,61 @@ def ml_pipeline_visualize(text):
     </div>"""
 
 
+def add_journal_entry(entry: str, mood: str):
+    if not entry or len(entry.strip()) < 5:
+        return get_journal_display()
+    classification = classify_text(entry)
+    emotions = analyze_emotions(entry)
+    SESSION_DATA["journal"].append({
+        "timestamp": time.time(), "text": entry, "mood_tag": mood,
+        "classification": classification["label"],
+        "top_emotion": max(emotions.items(), key=lambda x: x[1])[0],
+        "severity": classification["severity_score"],
+    })
+    return get_journal_display()
+
+
+def get_journal_display():
+    if not SESSION_DATA["journal"]:
+        return milo_guide("Your journal is empty! Write your first entry to start tracking emotional patterns over time. I'll analyze each entry with NLP and detect trends. 📓", "thinking")
+
+    entries_html = ""
+    mood_counts = defaultdict(int)
+    emotion_counts = defaultdict(int)
+
+    for entry in reversed(SESSION_DATA["journal"][-10:]):
+        mood_counts[entry["classification"]] += 1
+        emotion_counts[entry["top_emotion"]] += 1
+        mood_colors = {"normal": "#10b981", "stress": "#f59e0b", "anxiety": "#f97316", "depression": "#8b5cf6", "severe": "#ef4444"}
+        entry_color = mood_colors.get(entry["classification"], "#6366f1")
+        entries_html += f"""
+        <div style="background: white; border-left: 4px solid {entry_color}; border-radius: 0 14px 14px 0; padding: 14px 16px; margin: 8px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="background: {entry_color}15; color: {entry_color}; font-size: 0.68em; padding: 3px 10px; border-radius: 10px; font-weight: 600;">{entry['classification'].upper()}</span>
+                <span style="font-size: 0.68em; color: #94a3b8;">{entry['mood_tag']}</span>
+            </div>
+            <p style="color: #334155; font-size: 0.82em; margin: 0; line-height: 1.6;">{entry['text'][:180]}{'...' if len(entry['text']) > 180 else ''}</p>
+            <div style="font-size: 0.68em; color: #94a3b8; margin-top: 6px;">Emotion: {entry['top_emotion']} · Severity: {entry['severity']*100:.0f}%</div>
+        </div>"""
+
+    pattern_html = ""
+    if len(SESSION_DATA["journal"]) >= 3:
+        top_mood = max(mood_counts.items(), key=lambda x: x[1])
+        top_emo = max(emotion_counts.items(), key=lambda x: x[1])
+        pattern_html = f"""
+        <div style="background: linear-gradient(135deg, #eef2ff, #e0e7ff); border: 1px solid #c7d2fe; border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+            <div style="font-size: 0.8em; font-weight: 600; color: #3730a3; margin-bottom: 6px;">📊 Pattern Detection ({len(SESSION_DATA['journal'])} entries)</div>
+            <div style="font-size: 0.75em; color: #4338ca;">Most frequent: <strong>{top_mood[0].capitalize()}</strong> · Dominant emotion: <strong>{top_emo[0].capitalize()}</strong></div>
+        </div>"""
+
+    return f"""<div style="font-family:'Inter',sans-serif;">
+        {milo_guide(f"You have {len(SESSION_DATA['journal'])} journal entries! I'm detecting patterns across your emotional landscape. Keep writing — consistency reveals insights. 📝", "happy")}
+        {pattern_html}
+        <div style="font-size: 0.75em; color: #64748b; margin-bottom: 8px; font-weight: 500;">{len(SESSION_DATA['journal'])} Entries (newest first)</div>
+        {entries_html}
+    </div>"""
+
+
 BADGES = [
     {"id": "analyst_1", "name": "First Analysis", "icon": "🔬", "desc": "Complete your first deep analysis", "tier": "bronze", "check": lambda d: d["total_interactions"] >= 1},
     {"id": "analyst_5", "name": "Pattern Seeker", "icon": "🧠", "desc": "Complete 5 deep analyses", "tier": "silver", "check": lambda d: d["total_interactions"] >= 5},
@@ -1331,7 +1386,13 @@ def get_resources(category="All"):
 
 CSS = """
 footer {display: none !important;}
-.gradio-container {max-width: 1400px !important;}
+.gradio-container {max-width: 1400px !important; font-size: 15px !important;}
+
+/* Typography hierarchy */
+h1, h2, h3, h4 { letter-spacing: -0.02em !important; }
+.markdown h4 { font-size: 1.05em !important; }
+.markdown p { font-size: 0.9em !important; line-height: 1.7 !important; }
+label { font-size: 0.88em !important; font-weight: 500 !important; color: #334155 !important; }
 
 /* Glassmorphism panels */
 .panel, .block {
@@ -1547,7 +1608,30 @@ with gr.Blocks(
                     </div>
                 </div>
 
-                <p style="margin-top: 28px; font-size: 0.8em; color: #94a3b8;">Navigate the tabs above to explore each stage → Start with <strong>🧠 Deep Analysis</strong></p>
+                <!-- Journey stages -->
+                <div style="margin-top: 32px; max-width: 600px;">
+                    <div style="font-size: 0.72em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Your Journey Stages</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; padding: 12px 16px;">
+                            <span style="background: #6366f1; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">1</span>
+                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🧠 Deep Analysis</div><div style="font-size: 0.65em; color: #64748b;">6-dimension NLP scan of your text</div></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 12px; padding: 12px 16px;">
+                            <span style="background: #10b981; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">2</span>
+                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🎮 Emotion Challenge</div><div style="font-size: 0.65em; color: #64748b;">Test your EQ against the ML model</div></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; padding: 12px 16px;">
+                            <span style="background: #8b5cf6; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">3</span>
+                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🔬 ML Pipeline</div><div style="font-size: 0.65em; color: #64748b;">Watch the neural network think live</div></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15); border-radius: 12px; padding: 12px 16px;">
+                            <span style="background: #f59e0b; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">4</span>
+                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">💬 CBT Companion + Tools</div><div style="font-size: 0.65em; color: #64748b;">Chat, reframe, breathe, journal, track</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 20px; font-size: 0.75em; color: #94a3b8;">Click the tabs above to start your journey →</p>
             </div>
             <style>
                 @keyframes particle-float {
@@ -1741,6 +1825,20 @@ with gr.Blocks(
             </div>
             <style>@keyframes breathe{0%,100%{stroke-dashoffset:502;}21%{stroke-dashoffset:0;}58%{stroke-dashoffset:0;}100%{stroke-dashoffset:502;}}</style>
             """)
+
+        with gr.Tab("📓 Journal"):
+            gr.HTML(milo_guide("Your AI-powered mood journal! Each entry is automatically analyzed for emotional state, cognitive patterns, and severity. Write consistently and I'll detect patterns across your entries. 📝", "caring"))
+            with gr.Row():
+                with gr.Column(scale=2):
+                    journal_input = gr.Textbox(label="📝 What's on your mind?", placeholder="Write freely about your thoughts, feelings, or experiences today...", lines=4)
+                    journal_mood = gr.Radio(
+                        choices=["😊 Good", "😐 Okay", "😔 Low", "😰 Anxious", "😤 Stressed", "😢 Sad"],
+                        label="Quick mood tag", value="😐 Okay"
+                    )
+                    journal_btn = gr.Button("📓 Save Entry & Analyze", variant="primary", size="lg")
+                with gr.Column(scale=3):
+                    journal_display = gr.HTML(value=get_journal_display())
+            journal_btn.click(add_journal_entry, inputs=[journal_input, journal_mood], outputs=[journal_display])
 
         with gr.Tab("🏆 Rewards"):
             gr.HTML(milo_guide("Your wellness achievements! Every analysis, check-in, and CBT exercise earns XP. Unlock badges as you build healthy habits — this gamification is backed by research showing 48% higher engagement in health apps. 🎮", "celebrate"))
