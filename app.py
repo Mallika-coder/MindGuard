@@ -6,6 +6,7 @@ Multi-dimensional NLP: BERT + FAISS + LangChain RAG + Plutchik + CBT + AI Guide
 import gradio as gr
 import numpy as np
 import random
+import re
 import time
 from collections import defaultdict
 
@@ -102,25 +103,58 @@ GAD7_QUESTIONS = [
 
 
 def milo_guide(message, mood="neutral"):
-    mood_faces = {
-        "neutral": "😊",
-        "happy": "🤗",
-        "thinking": "🤔",
-        "caring": "💚",
-        "alert": "⚡",
-        "calm": "🧘",
-        "celebrate": "🎉",
+    mood_colors = {
+        "neutral": ("#10b981", "#d1fae5"),
+        "happy": ("#10b981", "#d1fae5"),
+        "thinking": ("#6366f1", "#eef2ff"),
+        "caring": ("#ec4899", "#fce7f3"),
+        "alert": ("#ef4444", "#fef2f2"),
+        "calm": ("#06b6d4", "#ecfeff"),
+        "celebrate": ("#f59e0b", "#fefce8"),
     }
-    face = mood_faces.get(mood, "😊")
+    primary, bg = mood_colors.get(mood, ("#10b981", "#d1fae5"))
+
     return f"""
-    <div style="display: flex; align-items: flex-start; gap: 12px; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #d1fae5 100%); border: 1px solid #86efac; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: radial-gradient(circle, #86efac33, transparent); border-radius: 50%;"></div>
-        <div style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4em; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); animation: milo-bounce 2s ease-in-out infinite;">
-            {face}
+    <div style="display: flex; align-items: center; gap: 20px; background: linear-gradient(135deg, {bg} 0%, white 100%); border: 1px solid {primary}44; border-radius: 20px; padding: 20px 24px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 4px 20px {primary}15;">
+        <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, {primary}15, transparent); border-radius: 50%;"></div>
+        <!-- Milo Character SVG -->
+        <div style="flex-shrink: 0; position: relative;">
+            <svg width="80" height="80" viewBox="0 0 100 100" style="filter: drop-shadow(0 4px 8px {primary}33);">
+                <!-- Body -->
+                <circle cx="50" cy="55" r="30" fill="{primary}" opacity="0.15"/>
+                <!-- Head -->
+                <circle cx="50" cy="38" r="22" fill="{primary}"/>
+                <!-- Face highlight -->
+                <circle cx="50" cy="35" r="18" fill="{primary}" opacity="0.8"/>
+                <ellipse cx="50" cy="32" rx="14" ry="10" fill="white" opacity="0.2"/>
+                <!-- Eyes -->
+                <ellipse cx="43" cy="36" rx="3.5" ry="4" fill="white"/>
+                <ellipse cx="57" cy="36" rx="3.5" ry="4" fill="white"/>
+                <circle cx="43" cy="37" r="2" fill="#1e293b"/>
+                <circle cx="57" cy="37" r="2" fill="#1e293b"/>
+                <circle cx="44" cy="35.5" r="0.8" fill="white"/>
+                <circle cx="58" cy="35.5" r="0.8" fill="white"/>
+                <!-- Smile -->
+                <path d="M 42 44 Q 50 51 58 44" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <!-- Blush -->
+                <circle cx="38" cy="42" r="3" fill="#fecdd3" opacity="0.6"/>
+                <circle cx="62" cy="42" r="3" fill="#fecdd3" opacity="0.6"/>
+                <!-- Shield badge -->
+                <path d="M 65 20 L 70 18 L 75 20 L 75 26 L 70 29 L 65 26 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.5"/>
+                <text x="70" y="25" text-anchor="middle" fill="white" font-size="5" font-weight="bold">M</text>
+                <!-- Wave hand animation -->
+                <g style="animation: milo-wave 2s ease-in-out infinite; transform-origin: 75px 50px;">
+                    <circle cx="78" cy="50" r="5" fill="{primary}"/>
+                    <circle cx="78" cy="50" r="3.5" fill="{primary}" opacity="0.8"/>
+                </g>
+            </svg>
         </div>
         <div style="flex: 1; position: relative; z-index: 1;">
-            <div style="font-size: 0.7em; color: #059669; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Milo — Your AI Guide</div>
-            <div style="color: #065f46; font-size: 0.88em; line-height: 1.6;">{message}</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span style="font-size: 0.72em; color: {primary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Milo</span>
+                <span style="font-size: 0.6em; background: {primary}22; color: {primary}; padding: 1px 6px; border-radius: 6px;">AI Guide</span>
+            </div>
+            <div style="color: #1e293b; font-size: 0.9em; line-height: 1.65; font-weight: 400;">{message}</div>
         </div>
     </div>
     """
@@ -586,9 +620,33 @@ def thought_reframe(thought: str):
         </div>"""
 
     reframed = thought
-    replacements = {"always": "sometimes", "never": "not always", "everyone": "some people", "nothing": "not everything", "nobody": "not everyone"}
-    for old, new in replacements.items():
-        reframed = reframed.replace(old, new).replace(old.capitalize(), new.capitalize())
+    replacements = [
+        ("I always fail", "I haven't succeeded at this specific thing yet"),
+        ("always fail", "haven't succeeded at this yet"),
+        ("I always", "In this situation, I"),
+        ("always", "sometimes"),
+        ("I never", "I haven't yet"),
+        ("never works", "hasn't worked in this case"),
+        ("never", "not yet"),
+        ("everyone thinks", "I'm assuming some people might think"),
+        ("everyone", "some people"),
+        ("Nobody cares", "I feel like people don't care right now"),
+        ("nobody", "not everyone"),
+        ("Nothing ever", "Things haven't been"),
+        ("nothing", "not everything"),
+        ("I should", "I would like to"),
+        ("I'm a failure", "I'm someone who is still learning"),
+        ("I'm stupid", "I'm struggling with this particular thing"),
+        ("Everything is ruined", "This situation is difficult"),
+        ("It's all my fault", "I played a part, but many factors contributed"),
+        ("worst", "difficult"),
+        ("terrible", "challenging"),
+        ("horrible", "tough"),
+        ("disaster", "setback"),
+    ]
+    for old, new in replacements:
+        if old.lower() in reframed.lower():
+            reframed = re.sub(re.escape(old), new, reframed, flags=re.IGNORECASE, count=1)
 
     return f"""
     <div style="font-family: 'Inter', sans-serif;">
@@ -839,14 +897,14 @@ BADGES = [
 ]
 
 RESOURCES = [
-    {"title": "Understanding CBT", "category": "Therapy", "icon": "🧠", "content": "Cognitive Behavioral Therapy is the gold-standard treatment for anxiety and depression. It works by identifying negative thought patterns (cognitive distortions) and systematically challenging them with evidence. Research shows 60-80% of patients improve significantly within 12-16 sessions."},
-    {"title": "Sleep Hygiene Guide", "category": "Sleep", "icon": "🌙", "content": "Quality sleep is foundational to mental health. Key practices: consistent schedule (even weekends), dark/cool room (65-68°F), no screens 1hr before bed, limit caffeine after 2PM, and a relaxation routine. CBT-I is more effective than medication for chronic insomnia."},
-    {"title": "The 5-4-3-2-1 Grounding Technique", "category": "Mindfulness", "icon": "🧘", "content": "When anxiety strikes, engage your senses: Name 5 things you SEE, 4 you can TOUCH, 3 you HEAR, 2 you SMELL, 1 you TASTE. This pulls your attention from anxious thoughts to the present moment. Research shows it reduces acute anxiety within 2-3 minutes."},
-    {"title": "Building Healthy Boundaries", "category": "Relationships", "icon": "💬", "content": "Boundaries protect your mental energy. Start small: 'I need some time to think about that.' Practice saying no without over-explaining. Healthy boundaries aren't walls — they're guidelines that help others understand how to treat you well."},
-    {"title": "The Stress-Performance Curve", "category": "Stress", "icon": "📈", "content": "Some stress improves performance (eustress), but too much causes burnout. The Yerkes-Dodson law shows performance peaks at moderate arousal. Techniques: time-boxing, Pomodoro method, strategic breaks, and distinguishing urgent from important (Eisenhower Matrix)."},
-    {"title": "Mindful Breathing Science", "category": "Mindfulness", "icon": "🫁", "content": "Extended exhalation stimulates the vagus nerve, activating the parasympathetic ('rest and digest') response. The 4-7-8 technique reduces cortisol within 2-3 cycles. Daily practice physically changes brain structure within 8 weeks (increased prefrontal cortex thickness)."},
-    {"title": "Digital Wellness", "category": "Productivity", "icon": "📱", "content": "Social media use >2hrs/day correlates with increased anxiety and depression in young adults. Strategies: batch notifications, grayscale mode, app timers, phone-free morning/evening routines, and replacing scroll time with one intentional activity."},
-    {"title": "Exercise as Medicine", "category": "Self-Care", "icon": "🏃", "content": "30 minutes of moderate exercise is as effective as antidepressants for mild-moderate depression (Blumenthal et al., 2007). It increases BDNF (brain growth factor), serotonin, and endorphins. Even a 10-minute walk significantly reduces anxiety. Consistency matters more than intensity."},
+    {"title": "Understanding CBT", "category": "Therapy", "icon": "🧠", "video": "https://www.youtube.com/embed/ZdyOwZ4_RnI", "content": "Cognitive Behavioral Therapy is the gold-standard treatment for anxiety and depression. It works by identifying negative thought patterns (cognitive distortions) and systematically challenging them with evidence. Research shows 60-80% of patients improve significantly within 12-16 sessions."},
+    {"title": "Sleep Hygiene Guide", "category": "Sleep", "icon": "🌙", "video": "https://www.youtube.com/embed/nm1TxQj9IsQ", "content": "Quality sleep is foundational to mental health. Key practices: consistent schedule (even weekends), dark/cool room (65-68°F), no screens 1hr before bed, limit caffeine after 2PM, and a relaxation routine. CBT-I is more effective than medication for chronic insomnia."},
+    {"title": "The 5-4-3-2-1 Grounding Technique", "category": "Mindfulness", "icon": "🧘", "video": "https://www.youtube.com/embed/30VMIEmA114", "content": "When anxiety strikes, engage your senses: Name 5 things you SEE, 4 you can TOUCH, 3 you HEAR, 2 you SMELL, 1 you TASTE. This pulls your attention from anxious thoughts to the present moment. Research shows it reduces acute anxiety within 2-3 minutes."},
+    {"title": "Building Healthy Boundaries", "category": "Relationships", "icon": "💬", "video": "https://www.youtube.com/embed/4E1JiDFxFGk", "content": "Boundaries protect your mental energy. Start small: 'I need some time to think about that.' Practice saying no without over-explaining. Healthy boundaries aren't walls — they're guidelines that help others understand how to treat you well."},
+    {"title": "The Stress-Performance Curve", "category": "Stress", "icon": "📈", "video": "https://www.youtube.com/embed/RcGyVTAoXEU", "content": "Some stress improves performance (eustress), but too much causes burnout. The Yerkes-Dodson law shows performance peaks at moderate arousal. Techniques: time-boxing, Pomodoro method, strategic breaks, and distinguishing urgent from important (Eisenhower Matrix)."},
+    {"title": "Mindful Breathing Science", "category": "Mindfulness", "icon": "🫁", "video": "https://www.youtube.com/embed/tEmt1Znux58", "content": "Extended exhalation stimulates the vagus nerve, activating the parasympathetic ('rest and digest') response. The 4-7-8 technique reduces cortisol within 2-3 cycles. Daily practice physically changes brain structure within 8 weeks (increased prefrontal cortex thickness)."},
+    {"title": "Digital Wellness", "category": "Productivity", "icon": "📱", "video": "https://www.youtube.com/embed/3E7hkPZ-HTk", "content": "Social media use >2hrs/day correlates with increased anxiety and depression in young adults. Strategies: batch notifications, grayscale mode, app timers, phone-free morning/evening routines, and replacing scroll time with one intentional activity."},
+    {"title": "Exercise as Medicine", "category": "Self-Care", "icon": "🏃", "video": "https://www.youtube.com/embed/DsVzKCk066g", "content": "30 minutes of moderate exercise is as effective as antidepressants for mild-moderate depression (Blumenthal et al., 2007). It increases BDNF (brain growth factor), serotonin, and endorphins. Even a 10-minute walk significantly reduces anxiety. Consistency matters more than intensity."},
 ]
 
 
@@ -909,21 +967,28 @@ def get_resources(category="All"):
     filtered = RESOURCES if category == "All" else [r for r in RESOURCES if r["category"] == category]
     cards = ""
     for r in filtered:
+        video_html = ""
+        if r.get("video"):
+            video_html = f"""
+            <div style="margin-bottom: 12px; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
+                <iframe src="{r['video']}" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>"""
         cards += f"""
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s;">
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden;">
+            {video_html}
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span style="font-size: 1.4em;">{r['icon']}</span>
+                <span style="font-size: 1.4em; background: #f8fafc; padding: 6px; border-radius: 10px;">{r['icon']}</span>
                 <div>
                     <h4 style="margin: 0; font-size: 0.9em; color: #1e293b;">{r['title']}</h4>
                     <span style="font-size: 0.65em; background: #eef2ff; color: #4f46e5; padding: 2px 8px; border-radius: 8px;">{r['category']}</span>
                 </div>
             </div>
-            <p style="color: #475569; font-size: 0.8em; line-height: 1.6; margin: 0;">{r['content']}</p>
+            <p style="color: #475569; font-size: 0.8em; line-height: 1.7; margin: 0;">{r['content']}</p>
         </div>"""
 
     return f"""<div style="font-family:'Inter',sans-serif;">
-        {milo_guide("Here are curated, evidence-based resources to support your mental health journey. Each article is grounded in research and clinical best practices. 📚", "happy")}
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;">
+        {milo_guide("Watch, read, and learn! Each resource includes a video plus evidence-based insights. Filter by topic to find what's most relevant to you right now. 📚🎬", "happy")}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px;">
             {cards}
         </div>
     </div>"""
@@ -935,6 +1000,11 @@ footer {display: none !important;}
 @keyframes milo-bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
+}
+@keyframes milo-wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(15deg); }
+    75% { transform: rotate(-5deg); }
 }
 """
 
@@ -948,8 +1018,24 @@ with gr.Blocks(
     <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 30%, #312e81 60%, #4f46e5 90%, #6366f1 100%); padding: 40px 24px; border-radius: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden;">
         <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.4), transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(139,92,246,0.3), transparent 60%);"></div>
         <div style="position: relative; z-index: 1;">
-            <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4em; box-shadow: 0 4px 15px rgba(16,185,129,0.4); animation: milo-bounce 2s ease-in-out infinite;">😊</div>
+            <div style="display: inline-flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+                <svg width="64" height="64" viewBox="0 0 100 100" style="filter: drop-shadow(0 4px 12px rgba(16,185,129,0.5)); animation: milo-bounce 2.5s ease-in-out infinite;">
+                    <circle cx="50" cy="55" r="30" fill="#10b981" opacity="0.2"/>
+                    <circle cx="50" cy="38" r="22" fill="#10b981"/>
+                    <circle cx="50" cy="35" r="18" fill="#10b981" opacity="0.85"/>
+                    <ellipse cx="50" cy="32" rx="14" ry="10" fill="white" opacity="0.15"/>
+                    <ellipse cx="43" cy="36" rx="3.5" ry="4" fill="white"/>
+                    <ellipse cx="57" cy="36" rx="3.5" ry="4" fill="white"/>
+                    <circle cx="43" cy="37" r="2" fill="#1e293b"/>
+                    <circle cx="57" cy="37" r="2" fill="#1e293b"/>
+                    <circle cx="44" cy="35.5" r="0.8" fill="white"/>
+                    <circle cx="58" cy="35.5" r="0.8" fill="white"/>
+                    <path d="M 42 44 Q 50 51 58 44" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="38" cy="42" r="3" fill="#fecdd3" opacity="0.5"/>
+                    <circle cx="62" cy="42" r="3" fill="#fecdd3" opacity="0.5"/>
+                    <path d="M 65 20 L 70 18 L 75 20 L 75 26 L 70 29 L 65 26 Z" fill="#fbbf24"/>
+                    <text x="70" y="25" text-anchor="middle" fill="white" font-size="5" font-weight="bold">M</text>
+                </svg>
                 <div style="font-size: 2.4em; font-weight: 800; color: white; letter-spacing: -0.03em;">🛡️ MindGuard</div>
             </div>
             <p style="color: rgba(255,255,255,0.8); font-size: 1em; margin: 4px 0 0 0;">AI-Powered Mental Health Screening & Clinical Decision Support</p>
