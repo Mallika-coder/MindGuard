@@ -1388,11 +1388,18 @@ CSS = """
 footer {display: none !important;}
 .gradio-container {max-width: 1400px !important; font-size: 15px !important;}
 
+/* Full-width pages */
+.tabitem { padding: 0 !important; }
+.tabitem > div { padding: 16px 4px !important; }
+.block { border-radius: 16px !important; }
+
 /* Typography hierarchy */
 h1, h2, h3, h4 { letter-spacing: -0.02em !important; }
-.markdown h4 { font-size: 1.05em !important; }
-.markdown p { font-size: 0.9em !important; line-height: 1.7 !important; }
+.markdown h4 { font-size: 1.1em !important; font-weight: 600 !important; color: #1e293b !important; }
+.markdown p { font-size: 0.92em !important; line-height: 1.7 !important; color: #475569 !important; }
+.markdown h5 { font-size: 0.95em !important; font-weight: 600 !important; color: #334155 !important; }
 label { font-size: 0.88em !important; font-weight: 500 !important; color: #334155 !important; }
+.prose { max-width: none !important; }
 
 /* Glassmorphism panels */
 .panel, .block {
@@ -1646,24 +1653,21 @@ with gr.Blocks(
             """)
 
         with gr.Tab("🧠 Deep Analysis"):
-            gr.HTML(milo_guide("Welcome! Paste any text about how you're feeling and I'll run it through 6 analysis dimensions — classification, emotions, cognition, linguistics, risk scoring, and personalized guidance. The more you write, the richer the insights! 🔬", "happy"))
+            gr.HTML(milo_guide("Share how you've been feeling and I'll run a comprehensive 6-dimension analysis — classification, emotions, cognitive patterns, linguistic biomarkers, risk scoring, and personalized RAG-enhanced guidance. The more detail, the richer the insights! 🔬", "happy"))
+            gr.HTML("""
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                <span style="background: #eef2ff; color: #4338ca; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">1. Classification</span>
+                <span style="background: #fce7f3; color: #9d174d; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">2. Emotions</span>
+                <span style="background: #fef9c3; color: #854d0e; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">3. Cognition</span>
+                <span style="background: #ecfdf5; color: #065f46; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">4. Linguistics</span>
+                <span style="background: #fef2f2; color: #991b1b; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">5. Risk</span>
+                <span style="background: #f0f9ff; color: #0c4a6e; padding: 5px 12px; border-radius: 8px; font-size: 0.72em; font-weight: 500;">6. RAG Response</span>
+            </div>
+            """)
+            text_input = gr.Textbox(label="📝 Share Your Thoughts", placeholder="Write about how you've been feeling lately. The more detail you provide, the more comprehensive the analysis.\n\nExamples:\n• 'I've been overwhelmed at work and can't sleep...'\n• 'Everything feels pointless, nothing brings joy...'\n• 'I had a great week and I'm feeling optimistic!'", lines=5, max_lines=10)
             with gr.Row():
-                with gr.Column(scale=2):
-                    text_input = gr.Textbox(label="📝 Share Your Thoughts", placeholder="Write about how you've been feeling...\nThe more detail, the better the analysis.", lines=6, max_lines=12)
-                    with gr.Row():
-                        clear_btn = gr.Button("Clear", variant="secondary", scale=1)
-                        analyze_btn = gr.Button("🔬 Run Full Analysis", variant="primary", scale=3, size="lg")
-                with gr.Column(scale=1):
-                    gr.HTML("""<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:18px;">
-                        <h4 style="color:#1e293b;margin:0 0 10px 0;font-size:0.85em;">🔬 6 Analysis Dimensions</h4>
-                        <div style="font-size:0.78em;color:#475569;line-height:2.2;">
-                            <div>1️⃣ <strong>Classification</strong> — 5-class severity</div>
-                            <div>2️⃣ <strong>Emotions</strong> — Plutchik 8-dim wheel</div>
-                            <div>3️⃣ <strong>Cognition</strong> — CBT distortion detection</div>
-                            <div>4️⃣ <strong>Linguistics</strong> — Biomarker extraction</div>
-                            <div>5️⃣ <strong>Risk</strong> — 4-factor composite score</div>
-                            <div>6️⃣ <strong>RAG</strong> — Evidence-based response</div>
-                        </div></div>""")
+                clear_btn = gr.Button("Clear", variant="secondary", scale=1)
+                analyze_btn = gr.Button("🔬 Run Full 6-Dimension Analysis", variant="primary", scale=4, size="lg")
             analysis_output = gr.HTML()
             analyze_btn.click(full_analysis, inputs=[text_input], outputs=[analysis_output])
             clear_btn.click(lambda: ("", ""), outputs=[text_input, analysis_output])
@@ -1677,14 +1681,23 @@ with gr.Blocks(
             ], inputs=text_input, label="")
 
         with gr.Tab("🎮 Emotion Challenge"):
-            gr.HTML(milo_guide("Test your emotional intelligence against the AI! Read a text passage, guess the dominant emotion, then see if you match the ML model's prediction. Each round teaches you how NLP detects feelings. 🎯", "celebrate"))
+            gr.HTML(milo_guide("Time to play! Read the text below, guess which emotion dominates, then see if you can beat my ML model. After each guess, I'll show you the full emotion breakdown and explain WHY the AI detected what it did. Can you match the neural network? 🎯", "celebrate"))
+            gr.HTML("""
+            <div style="background: linear-gradient(135deg, #fefce8, #fef9c3); border: 1px solid #fde047; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.4em;">🎮</span>
+                <div>
+                    <div style="font-size: 0.85em; font-weight: 600; color: #854d0e;">How it works</div>
+                    <div style="font-size: 0.75em; color: #a16207;">Read the passage → Pick an emotion → See if you match the AI → Learn why it detected that emotion</div>
+                </div>
+                <div style="margin-left: auto; background: #fbbf24; color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.7em; font-weight: 600;">8 Rounds</div>
+            </div>
+            """)
             challenge_idx = gr.State(value=0)
-            challenge_text_display = gr.Textbox(label="📖 Read this text and guess the dominant emotion:", value=EMOTION_CHALLENGE_TEXTS[0]["text"], lines=3, interactive=False)
+            challenge_text_display = gr.Textbox(label="📖 Read this passage carefully:", value=EMOTION_CHALLENGE_TEXTS[0]["text"], lines=3, interactive=False)
+            guess_input = gr.Radio(choices=["anger", "sadness", "fear", "joy", "disgust", "surprise", "trust", "anticipation"], label="🤔 Which emotion dominates this text?", info="Select one — then check if you matched the ML model")
             with gr.Row():
-                guess_input = gr.Radio(choices=["anger", "sadness", "fear", "joy", "disgust", "surprise", "trust", "anticipation"], label="🤔 Your guess — which emotion dominates?")
-            with gr.Row():
-                submit_guess = gr.Button("✅ Check My Answer", variant="primary", scale=2)
-                next_challenge = gr.Button("⏭️ Next Challenge", variant="secondary", scale=1)
+                submit_guess = gr.Button("✅ Check My Answer", variant="primary", scale=2, size="lg")
+                next_challenge = gr.Button("⏭️ Next Round", variant="secondary", scale=1, size="lg")
             challenge_result = gr.HTML()
 
             submit_guess.click(emotion_challenge, inputs=[guess_input, challenge_idx], outputs=[challenge_result])
@@ -1694,9 +1707,32 @@ with gr.Blocks(
             next_challenge.click(advance_challenge, inputs=[challenge_idx], outputs=[challenge_idx, challenge_text_display, challenge_result])
 
         with gr.Tab("🔬 ML Pipeline"):
-            gr.HTML(milo_guide("See the AI think in real-time! Enter any text and watch it flow through all 4 stages of the neural network pipeline — tokenization, embedding, vector search, and classification. This is what happens inside the model. 🧪", "thinking"))
-            pipeline_input = gr.Textbox(label="📝 Enter text to visualize", placeholder="Type anything and watch the ML pipeline process it step-by-step...", lines=3)
-            pipeline_btn = gr.Button("🔬 Visualize Pipeline", variant="primary", size="lg")
+            gr.HTML(milo_guide("This is where you see the AI think! Enter any text and I'll show you exactly what happens inside the neural network — from raw words to final prediction, step by step. This is real ML running live, not a demo. 🧪", "thinking"))
+            gr.HTML("""
+            <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 14px; padding: 16px 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; background: #6366f1; border-radius: 50%;"></div>
+                    <span style="color: #a5b4fc; font-size: 0.72em;">Tokenize</span>
+                </div>
+                <span style="color: #475569;">→</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; background: #ec4899; border-radius: 50%;"></div>
+                    <span style="color: #f9a8d4; font-size: 0.72em;">Embed (384-dim)</span>
+                </div>
+                <span style="color: #475569;">→</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                    <span style="color: #6ee7b7; font-size: 0.72em;">FAISS Search</span>
+                </div>
+                <span style="color: #475569;">→</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; background: #f59e0b; border-radius: 50%;"></div>
+                    <span style="color: #fcd34d; font-size: 0.72em;">Classify</span>
+                </div>
+            </div>
+            """)
+            pipeline_input = gr.Textbox(label="📝 Enter text to process through the pipeline", placeholder="Type anything — a thought, a feeling, a sentence — and watch 4 ML stages process it live...", lines=3)
+            pipeline_btn = gr.Button("🔬 Run ML Pipeline", variant="primary", size="lg")
             pipeline_output = gr.HTML()
             pipeline_btn.click(ml_pipeline_visualize, inputs=[pipeline_input], outputs=[pipeline_output])
             gr.Examples(examples=[
