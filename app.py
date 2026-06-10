@@ -557,6 +557,7 @@ def thought_reframe(thought: str):
     distortions = detect_cognitive_distortions(thought)
     emotions = analyze_emotions(thought)
     top_emotion = max(emotions.items(), key=lambda x: x[1])
+    SESSION_DATA["reframes_done"] = SESSION_DATA.get("reframes_done", 0) + 1
 
     if not distortions:
         return f"""
@@ -822,6 +823,112 @@ def get_session_analytics():
         </div></div>"""
 
 
+BADGES = [
+    {"id": "analyst_1", "name": "First Analysis", "icon": "🔬", "desc": "Complete your first deep analysis", "tier": "bronze", "check": lambda d: d["total_interactions"] >= 1},
+    {"id": "analyst_5", "name": "Pattern Seeker", "icon": "🧠", "desc": "Complete 5 deep analyses", "tier": "silver", "check": lambda d: d["total_interactions"] >= 5},
+    {"id": "analyst_15", "name": "Mind Explorer", "icon": "🌟", "desc": "Complete 15 deep analyses", "tier": "gold", "check": lambda d: d["total_interactions"] >= 15},
+    {"id": "checkin_1", "name": "Self-Aware", "icon": "🌡️", "desc": "Complete a daily check-in", "tier": "bronze", "check": lambda d: len(d["checkin_history"]) >= 1},
+    {"id": "checkin_3", "name": "Consistent", "icon": "📅", "desc": "Complete 3 daily check-ins", "tier": "silver", "check": lambda d: len(d["checkin_history"]) >= 3},
+    {"id": "checkin_7", "name": "Dedicated", "icon": "💪", "desc": "Complete 7 daily check-ins", "tier": "gold", "check": lambda d: len(d["checkin_history"]) >= 7},
+    {"id": "journal_1", "name": "Reflective", "icon": "📓", "desc": "Write a journal entry", "tier": "bronze", "check": lambda d: len(d["journal"]) >= 1},
+    {"id": "journal_5", "name": "Deep Thinker", "icon": "✍️", "desc": "Write 5 journal entries", "tier": "silver", "check": lambda d: len(d["journal"]) >= 5},
+    {"id": "reframer", "name": "Thought Reframer", "icon": "🔄", "desc": "Use the CBT reframing tool", "tier": "silver", "check": lambda d: d.get("reframes_done", 0) >= 1},
+    {"id": "reframer_5", "name": "CBT Master", "icon": "🎓", "desc": "Complete 5 CBT reframes", "tier": "gold", "check": lambda d: d.get("reframes_done", 0) >= 5},
+    {"id": "low_risk", "name": "Healthy Mind", "icon": "💚", "desc": "Achieve a risk score below 15%", "tier": "silver", "check": lambda d: any(r < 0.15 for r in d["risk_scores"]) if d["risk_scores"] else False},
+    {"id": "wellness_80", "name": "Thriving", "icon": "🌈", "desc": "Achieve 80%+ wellness score in check-in", "tier": "gold", "check": lambda d: any((h["mood"] + h["sleep"] + h["energy"] + h["social"]) / 20 >= 0.8 for h in d["checkin_history"]) if d["checkin_history"] else False},
+]
+
+RESOURCES = [
+    {"title": "Understanding CBT", "category": "Therapy", "icon": "🧠", "content": "Cognitive Behavioral Therapy is the gold-standard treatment for anxiety and depression. It works by identifying negative thought patterns (cognitive distortions) and systematically challenging them with evidence. Research shows 60-80% of patients improve significantly within 12-16 sessions."},
+    {"title": "Sleep Hygiene Guide", "category": "Sleep", "icon": "🌙", "content": "Quality sleep is foundational to mental health. Key practices: consistent schedule (even weekends), dark/cool room (65-68°F), no screens 1hr before bed, limit caffeine after 2PM, and a relaxation routine. CBT-I is more effective than medication for chronic insomnia."},
+    {"title": "The 5-4-3-2-1 Grounding Technique", "category": "Mindfulness", "icon": "🧘", "content": "When anxiety strikes, engage your senses: Name 5 things you SEE, 4 you can TOUCH, 3 you HEAR, 2 you SMELL, 1 you TASTE. This pulls your attention from anxious thoughts to the present moment. Research shows it reduces acute anxiety within 2-3 minutes."},
+    {"title": "Building Healthy Boundaries", "category": "Relationships", "icon": "💬", "content": "Boundaries protect your mental energy. Start small: 'I need some time to think about that.' Practice saying no without over-explaining. Healthy boundaries aren't walls — they're guidelines that help others understand how to treat you well."},
+    {"title": "The Stress-Performance Curve", "category": "Stress", "icon": "📈", "content": "Some stress improves performance (eustress), but too much causes burnout. The Yerkes-Dodson law shows performance peaks at moderate arousal. Techniques: time-boxing, Pomodoro method, strategic breaks, and distinguishing urgent from important (Eisenhower Matrix)."},
+    {"title": "Mindful Breathing Science", "category": "Mindfulness", "icon": "🫁", "content": "Extended exhalation stimulates the vagus nerve, activating the parasympathetic ('rest and digest') response. The 4-7-8 technique reduces cortisol within 2-3 cycles. Daily practice physically changes brain structure within 8 weeks (increased prefrontal cortex thickness)."},
+    {"title": "Digital Wellness", "category": "Productivity", "icon": "📱", "content": "Social media use >2hrs/day correlates with increased anxiety and depression in young adults. Strategies: batch notifications, grayscale mode, app timers, phone-free morning/evening routines, and replacing scroll time with one intentional activity."},
+    {"title": "Exercise as Medicine", "category": "Self-Care", "icon": "🏃", "content": "30 minutes of moderate exercise is as effective as antidepressants for mild-moderate depression (Blumenthal et al., 2007). It increases BDNF (brain growth factor), serotonin, and endorphins. Even a 10-minute walk significantly reduces anxiety. Consistency matters more than intensity."},
+]
+
+
+def get_rewards():
+    unlocked = [b for b in BADGES if b["check"](SESSION_DATA)]
+    total_xp = len(unlocked) * 100
+    level = total_xp // 300 + 1
+    xp_in_level = total_xp % 300
+
+    badge_cards = ""
+    for b in BADGES:
+        is_unlocked = b["check"](SESSION_DATA)
+        tier_colors = {"bronze": "#d97706", "silver": "#64748b", "gold": "#eab308"}
+        tier_bg = {"bronze": "#fef3c7", "silver": "#f1f5f9", "gold": "#fefce8"}
+        opacity = "1" if is_unlocked else "0.4"
+        border = f"2px solid {tier_colors[b['tier']]}" if is_unlocked else "1px solid #e2e8f0"
+        badge_cards += f"""
+        <div style="background: {tier_bg[b['tier']] if is_unlocked else '#f8fafc'}; border: {border}; border-radius: 14px; padding: 14px; text-align: center; opacity: {opacity}; transition: all 0.2s;">
+            <div style="font-size: 1.6em; margin-bottom: 4px;">{b['icon']}</div>
+            <div style="font-size: 0.75em; font-weight: 600; color: #1e293b; margin-bottom: 2px;">{b['name']}</div>
+            <div style="font-size: 0.65em; color: #94a3b8;">{b['desc']}</div>
+            <div style="font-size: 0.6em; color: {tier_colors[b['tier']]}; margin-top: 4px; text-transform: uppercase; font-weight: 600;">{b['tier']}</div>
+        </div>"""
+
+    xp_pct = xp_in_level / 300 * 100
+    milo_msg = f"You've earned {len(unlocked)}/{len(BADGES)} badges and {total_xp} XP! " + ("Keep going — every interaction counts toward your next badge! 🏆" if len(unlocked) < 6 else "Amazing progress! You're a dedicated self-care practitioner! 🌟")
+
+    return f"""<div style="font-family:'Inter',sans-serif;">
+        {milo_guide(milo_msg, "celebrate" if len(unlocked) >= 4 else "happy")}
+        <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 20px; padding: 28px; text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 0.7em; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1px;">Wellness Level</div>
+            <div style="font-size: 2.5em; font-weight: 800; color: white; margin: 4px 0;">Level {level}</div>
+            <div style="font-size: 0.85em; color: #c7d2fe; margin-bottom: 12px;">{total_xp} XP Total</div>
+            <div style="background: #4c1d95; border-radius: 10px; height: 14px; overflow: hidden; margin: 0 auto; max-width: 300px;">
+                <div style="height: 100%; width: {xp_pct}%; background: linear-gradient(90deg, #818cf8, #6366f1); border-radius: 10px;"></div>
+            </div>
+            <div style="font-size: 0.7em; color: #a5b4fc; margin-top: 6px;">{xp_in_level}/300 XP to Level {level + 1}</div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; justify-content: center;">
+            <div style="background: #eef2ff; border-radius: 12px; padding: 14px 24px; text-align: center;">
+                <div style="font-size: 1.5em; font-weight: 800; color: #4338ca;">{len(unlocked)}/{len(BADGES)}</div>
+                <div style="font-size: 0.7em; color: #6366f1;">Badges</div>
+            </div>
+            <div style="background: #ecfdf5; border-radius: 12px; padding: 14px 24px; text-align: center;">
+                <div style="font-size: 1.5em; font-weight: 800; color: #065f46;">{SESSION_DATA['total_interactions']}</div>
+                <div style="font-size: 0.7em; color: #10b981;">Analyses</div>
+            </div>
+            <div style="background: #fefce8; border-radius: 12px; padding: 14px 24px; text-align: center;">
+                <div style="font-size: 1.5em; font-weight: 800; color: #854d0e;">{len(SESSION_DATA['checkin_history'])}</div>
+                <div style="font-size: 0.7em; color: #d97706;">Check-ins</div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;">
+            {badge_cards}
+        </div>
+    </div>"""
+
+
+def get_resources(category="All"):
+    filtered = RESOURCES if category == "All" else [r for r in RESOURCES if r["category"] == category]
+    cards = ""
+    for r in filtered:
+        cards += f"""
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 1.4em;">{r['icon']}</span>
+                <div>
+                    <h4 style="margin: 0; font-size: 0.9em; color: #1e293b;">{r['title']}</h4>
+                    <span style="font-size: 0.65em; background: #eef2ff; color: #4f46e5; padding: 2px 8px; border-radius: 8px;">{r['category']}</span>
+                </div>
+            </div>
+            <p style="color: #475569; font-size: 0.8em; line-height: 1.6; margin: 0;">{r['content']}</p>
+        </div>"""
+
+    return f"""<div style="font-family:'Inter',sans-serif;">
+        {milo_guide("Here are curated, evidence-based resources to support your mental health journey. Each article is grounded in research and clinical best practices. 📚", "happy")}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;">
+            {cards}
+        </div>
+    </div>"""
+
+
 CSS = """
 footer {display: none !important;}
 .gradio-container {max-width: 1400px !important;}
@@ -991,6 +1098,18 @@ with gr.Blocks(
             </div>
             <style>@keyframes breathe{0%,100%{stroke-dashoffset:502;}21%{stroke-dashoffset:0;}58%{stroke-dashoffset:0;}100%{stroke-dashoffset:502;}}</style>
             """)
+
+        with gr.Tab("🏆 Rewards"):
+            gr.HTML(milo_guide("Your wellness achievements! Every analysis, check-in, and CBT exercise earns XP. Unlock badges as you build healthy habits — this gamification is backed by research showing 48% higher engagement in health apps. 🎮", "celebrate"))
+            rewards_btn = gr.Button("🔄 Refresh Rewards", variant="primary")
+            rewards_output = gr.HTML()
+            rewards_btn.click(get_rewards, outputs=[rewards_output])
+
+        with gr.Tab("📚 Resources"):
+            gr.HTML(milo_guide("Curated, evidence-based self-care resources! Each article is grounded in clinical research and written for actionable takeaways. Use these to build your mental health knowledge. 📖", "happy"))
+            resource_filter = gr.Radio(choices=["All", "Therapy", "Sleep", "Mindfulness", "Stress", "Relationships", "Productivity", "Self-Care"], value="All", label="Filter by Category")
+            resources_output = gr.HTML(value=get_resources("All"))
+            resource_filter.change(get_resources, inputs=[resource_filter], outputs=[resources_output])
 
         with gr.Tab("📊 Analytics"):
             gr.HTML(milo_guide("This is your session command center! I track every analysis you run and build a picture of your patterns. Use the Deep Analysis tool a few times, then come back here to see trends. 📈", "thinking"))
