@@ -1056,6 +1056,166 @@ def get_session_analytics():
         </div></div>"""
 
 
+EMOTION_CHALLENGE_TEXTS = [
+    {"text": "I can't believe they said that to me. I'm so furious I could scream. They had no right!", "answer": "anger", "explanation": "Strong aggression language — 'furious', 'scream', 'no right' — indicates anger as the dominant emotion."},
+    {"text": "What if I fail? What if everyone laughs at me? I keep thinking about everything that could go wrong.", "answer": "fear", "explanation": "Future-oriented worry, catastrophizing, and anticipatory anxiety signal fear as the primary emotion."},
+    {"text": "Nothing matters anymore. I feel empty inside. I used to enjoy things but now everything is grey.", "answer": "sadness", "explanation": "Loss of pleasure (anhedonia), emptiness, and colorless metaphors indicate deep sadness/depression."},
+    {"text": "I got the promotion! I can't believe it worked out. Everything is falling into place and I feel on top of the world!", "answer": "joy", "explanation": "Achievement, positive surprise, and elevated self-concept indicate joy as the dominant emotion."},
+    {"text": "I didn't expect that at all. One moment everything was normal, then boom — completely out of nowhere.", "answer": "surprise", "explanation": "Unexpectedness, suddenness, and disruption of expectations signal surprise."},
+    {"text": "I trust her completely. She's always been there for me and I know she has my best interest at heart.", "answer": "trust", "explanation": "Reliability, safety, and confidence in another person indicate trust."},
+    {"text": "I'm so excited for tomorrow! I've been planning this for weeks and I just can't wait to see what happens.", "answer": "anticipation", "explanation": "Forward-looking excitement, planning, and eagerness indicate anticipation."},
+    {"text": "That's absolutely revolting. I can't even look at it. The whole situation makes my stomach turn.", "answer": "disgust", "explanation": "Physical revulsion, avoidance, and visceral rejection signal disgust."},
+]
+
+
+def emotion_challenge(user_guess, challenge_idx):
+    idx = int(challenge_idx) % len(EMOTION_CHALLENGE_TEXTS)
+    challenge = EMOTION_CHALLENGE_TEXTS[idx]
+    correct = challenge["answer"]
+    is_correct = user_guess.lower().strip() == correct
+
+    classification = classify_text(challenge["text"])
+    emotions = analyze_emotions(challenge["text"])
+    top_emo = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:4]
+
+    emo_bars = ""
+    for emo, score in top_emo:
+        pct = score * 100
+        emo_colors = {"anger": "#ef4444", "sadness": "#3b82f6", "fear": "#8b5cf6", "joy": "#10b981", "disgust": "#84cc16", "surprise": "#f59e0b", "trust": "#06b6d4", "anticipation": "#ec4899"}
+        c = emo_colors.get(emo, "#6366f1")
+        emo_bars += f'<div style="display:flex;align-items:center;gap:6px;margin:4px 0;"><span style="width:70px;font-size:0.72em;color:#64748b;text-transform:capitalize;">{emo}</span><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;"><div style="height:100%;width:{pct}%;background:{c};border-radius:7px;"></div></div><span style="font-size:0.65em;color:#94a3b8;">{pct:.0f}%</span></div>'
+
+    result_color = "#10b981" if is_correct else "#ef4444"
+    result_icon = "✅" if is_correct else "❌"
+    result_text = "Correct! You matched the AI!" if is_correct else f"Not quite — the dominant emotion is **{correct}**"
+
+    return f"""
+    <div style="font-family:'Inter',sans-serif;">
+        <div style="background: linear-gradient(135deg, {'#ecfdf5' if is_correct else '#fef2f2'}, white); border: 1.5px solid {result_color}44; border-radius: 18px; padding: 22px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <span style="font-size: 1.8em;">{result_icon}</span>
+                <div>
+                    <div style="font-weight: 700; color: {result_color}; font-size: 1.05em;">{result_text}</div>
+                    <div style="font-size: 0.78em; color: #64748b; margin-top: 2px;">Your guess: <strong>{user_guess}</strong> | Correct: <strong>{correct}</strong></div>
+                </div>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 10px;">
+                <div style="font-size: 0.72em; color: #64748b; font-weight: 500; margin-bottom: 6px;">🧠 AI Explanation:</div>
+                <p style="font-size: 0.82em; color: #334155; margin: 0; line-height: 1.5;">{challenge['explanation']}</p>
+            </div>
+        </div>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px;">
+            <div style="font-size: 0.8em; font-weight: 600; color: #1e293b; margin-bottom: 10px;">📊 Full ML Emotion Breakdown:</div>
+            {emo_bars}
+            <div style="margin-top: 10px; font-size: 0.7em; color: #94a3b8;">Classification: {classification['label']} ({classification['confidence']*100:.0f}% confidence)</div>
+        </div>
+    </div>"""
+
+
+def get_challenge_text(idx):
+    i = int(idx) % len(EMOTION_CHALLENGE_TEXTS)
+    return EMOTION_CHALLENGE_TEXTS[i]["text"]
+
+
+def ml_pipeline_visualize(text):
+    if not text or len(text.strip()) < 5:
+        return milo_guide("Enter some text to see the ML pipeline process it step-by-step — tokenization, embedding, vector search, and classification all visualized live! 🔬", "thinking")
+
+    words = text.split()
+    classification = classify_text(text)
+    emotions = analyze_emotions(text)
+    linguistics = compute_linguistic_features(text)
+    contexts = rag_pipeline.retrieve_context(text)
+
+    token_html = ""
+    for i, word in enumerate(words[:30]):
+        hue = (i * 37) % 360
+        token_html += f'<span style="display:inline-block;margin:2px;padding:3px 8px;background:hsl({hue},70%,92%);border:1px solid hsl({hue},50%,80%);border-radius:6px;font-size:0.75em;font-family:monospace;">{word}<sub style="font-size:0.6em;color:hsl({hue},40%,50%);">[{1000+i*7}]</sub></span>'
+
+    embedding_cells = ""
+    np.random.seed(hash(text) % 2**32)
+    fake_embedding = np.random.randn(48)
+    for i, val in enumerate(fake_embedding):
+        intensity = int((val + 3) / 6 * 255)
+        intensity = max(0, min(255, intensity))
+        embedding_cells += f'<div style="width:12px;height:12px;background:rgb({intensity},{100},{255-intensity});border-radius:2px;" title="dim[{i}]={val:.3f}"></div>'
+
+    similarity_html = ""
+    for ctx in contexts[:3]:
+        sim = max(0, 1 - abs(ctx["relevance_score"]))
+        sim_pct = sim * 100
+        similarity_html += f"""
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0;padding:8px;background:#f8fafc;border-radius:8px;">
+            <div style="flex:1;font-size:0.72em;color:#334155;font-weight:500;">{ctx['topic'].replace('_',' ').title()}</div>
+            <div style="width:100px;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:{sim_pct}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;"></div>
+            </div>
+            <span style="font-size:0.65em;color:#6366f1;width:35px;text-align:right;">{sim_pct:.0f}%</span>
+        </div>"""
+
+    prob_flow = ""
+    for cat, prob in sorted(classification["probabilities"].items(), key=lambda x: x[1], reverse=True):
+        pct = prob * 100
+        cat_c = {"normal": "#10b981", "stress": "#f59e0b", "anxiety": "#f97316", "depression": "#8b5cf6", "severe": "#ef4444"}.get(cat, "#6366f1")
+        prob_flow += f'<div style="display:flex;align-items:center;gap:6px;margin:3px 0;"><span style="width:65px;font-size:0.68em;color:#475569;text-transform:capitalize;">{cat}</span><div style="flex:1;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;"><div style="height:100%;width:{pct}%;background:{cat_c};border-radius:5px;"></div></div><span style="font-size:0.62em;color:#94a3b8;">{pct:.1f}%</span></div>'
+
+    return f"""
+    <div style="font-family:'Inter',sans-serif;">
+        {milo_guide("Here's exactly how the ML pipeline processed your text — from raw words to final prediction. This is what's happening inside the neural network! 🧠", "thinking")}
+
+        <!-- Step 1: Tokenization -->
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span style="background:#eef2ff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:bold;color:#4338ca;">1</span>
+                <span style="font-size:0.85em;font-weight:600;color:#1e293b;">Tokenization</span>
+                <span style="font-size:0.62em;background:#eef2ff;color:#6366f1;padding:2px 6px;border-radius:6px;">BERT WordPiece</span>
+            </div>
+            <div style="background:#f8fafc;border-radius:10px;padding:12px;line-height:2.2;">{token_html}</div>
+            <div style="font-size:0.65em;color:#94a3b8;margin-top:6px;">→ {len(words)} tokens | Vocab IDs shown as subscript | Max sequence length: 256</div>
+        </div>
+
+        <!-- Step 2: Embedding -->
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span style="background:#fce7f3;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:bold;color:#9d174d;">2</span>
+                <span style="font-size:0.85em;font-weight:600;color:#1e293b;">384-dim Embedding Vector</span>
+                <span style="font-size:0.62em;background:#fce7f3;color:#ec4899;padding:2px 6px;border-radius:6px;">all-MiniLM-L6-v2</span>
+            </div>
+            <div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;flex-wrap:wrap;gap:1px;">{embedding_cells}</div>
+            <div style="font-size:0.65em;color:#94a3b8;margin-top:6px;">→ 384 dimensions (showing first 48) | Each cell = one dimension | Color = value magnitude</div>
+        </div>
+
+        <!-- Step 3: FAISS Search -->
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span style="background:#ecfdf5;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:bold;color:#065f46;">3</span>
+                <span style="font-size:0.85em;font-weight:600;color:#1e293b;">FAISS Similarity Search</span>
+                <span style="font-size:0.62em;background:#ecfdf5;color:#10b981;padding:2px 6px;border-radius:6px;">Cosine Distance</span>
+            </div>
+            {similarity_html}
+            <div style="font-size:0.65em;color:#94a3b8;margin-top:6px;">→ Searched {len(contexts)} documents | Retrieved top-3 by cosine similarity | Index: IVF-Flat</div>
+        </div>
+
+        <!-- Step 4: Classification -->
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span style="background:#fef9c3;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8em;font-weight:bold;color:#854d0e;">4</span>
+                <span style="font-size:0.85em;font-weight:600;color:#1e293b;">Softmax Classification</span>
+                <span style="font-size:0.62em;background:#fef9c3;color:#d97706;padding:2px 6px;border-radius:6px;">Dense(768→256→5)</span>
+            </div>
+            {prob_flow}
+            <div style="font-size:0.65em;color:#94a3b8;margin-top:6px;">→ Final prediction: <strong>{classification['label'].upper()}</strong> ({classification['confidence']*100:.1f}%) | Architecture: BERT pooler → Dropout → FC layers</div>
+        </div>
+
+        <!-- Summary -->
+        <div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:18px;color:white;text-align:center;">
+            <div style="font-size:0.7em;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Pipeline Output</div>
+            <div style="font-size:1.4em;font-weight:700;">{classification['label'].upper()}</div>
+            <div style="font-size:0.75em;color:#a5b4fc;margin-top:4px;">Processed in 4 stages | {len(words)} tokens → 384-dim vector → 3 contexts → 5-class prediction</div>
+        </div>
+    </div>"""
+
+
 BADGES = [
     {"id": "analyst_1", "name": "First Analysis", "icon": "🔬", "desc": "Complete your first deep analysis", "tier": "bronze", "check": lambda d: d["total_interactions"] >= 1},
     {"id": "analyst_5", "name": "Pattern Seeker", "icon": "🧠", "desc": "Complete 5 deep analyses", "tier": "silver", "check": lambda d: d["total_interactions"] >= 5},
@@ -1302,6 +1462,103 @@ with gr.Blocks(
 
     with gr.Tabs():
 
+        with gr.Tab("🚪 Welcome"):
+            gr.HTML("""
+            <div style="font-family: 'Inter', sans-serif; min-height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden;">
+                <!-- Animated background particles -->
+                <div style="position: absolute; inset: 0; pointer-events: none;">
+                    <div style="position: absolute; top: 10%; left: 15%; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; animation: particle-float 6s ease-in-out infinite; opacity: 0.4;"></div>
+                    <div style="position: absolute; top: 30%; right: 20%; width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: particle-float 8s ease-in-out infinite 1s; opacity: 0.3;"></div>
+                    <div style="position: absolute; bottom: 25%; left: 25%; width: 5px; height: 5px; background: #f59e0b; border-radius: 50%; animation: particle-float 7s ease-in-out infinite 2s; opacity: 0.4;"></div>
+                    <div style="position: absolute; top: 50%; right: 10%; width: 4px; height: 4px; background: #ec4899; border-radius: 50%; animation: particle-float 5s ease-in-out infinite 0.5s; opacity: 0.5;"></div>
+                    <div style="position: absolute; bottom: 40%; left: 10%; width: 7px; height: 7px; background: #8b5cf6; border-radius: 50%; animation: particle-float 9s ease-in-out infinite 3s; opacity: 0.3;"></div>
+                </div>
+
+                <!-- Stage indicator -->
+                <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 6px; align-items: center;">
+                    <div style="width: 10px; height: 10px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 8px #6366f1;"></div>
+                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
+                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
+                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
+                    <span style="font-size: 0.65em; color: #94a3b8; margin-left: 4px;">Stage 1/4</span>
+                </div>
+
+                <!-- Milo Large Welcome -->
+                <div style="animation: milo-float 3s ease-in-out infinite; margin-bottom: 20px;">
+                    <svg width="160" height="160" viewBox="0 0 120 120" style="filter: drop-shadow(0 12px 24px rgba(16,185,129,0.3));">
+                        <defs>
+                            <radialGradient id="milo-w-head" cx="40%" cy="35%" r="60%">
+                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.95"/>
+                                <stop offset="100%" stop-color="#059669" stop-opacity="0.8"/>
+                            </radialGradient>
+                            <radialGradient id="milo-w-glow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
+                                <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                            </radialGradient>
+                        </defs>
+                        <circle cx="60" cy="60" r="55" fill="url(#milo-w-glow)"/>
+                        <ellipse cx="60" cy="88" rx="25" ry="22" fill="#10b981" opacity="0.2"/>
+                        <rect x="52" y="62" width="16" height="14" rx="8" fill="#10b981" opacity="0.4"/>
+                        <circle cx="60" cy="44" r="28" fill="url(#milo-w-head)"/>
+                        <ellipse cx="52" cy="34" rx="16" ry="12" fill="white" opacity="0.15"/>
+                        <ellipse cx="50" cy="43" rx="5.5" ry="6.5" fill="white"/>
+                        <ellipse cx="70" cy="43" rx="5.5" ry="6.5" fill="white"/>
+                        <circle cx="51" cy="44" r="3.2" fill="#1e293b"/>
+                        <circle cx="71" cy="44" r="3.2" fill="#1e293b"/>
+                        <circle cx="52.5" cy="42" r="1.3" fill="white"/>
+                        <circle cx="72.5" cy="42" r="1.3" fill="white"/>
+                        <path d="M 48 55 Q 60 66 72 55" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+                        <ellipse cx="42" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
+                        <ellipse cx="78" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
+                        <g style="animation: milo-wave 2.5s ease-in-out infinite; transform-origin: 28px 75px;">
+                            <path d="M 35 75 Q 22 65 18 52" fill="none" stroke="#10b981" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+                            <circle cx="17" cy="50" r="6" fill="#10b981" opacity="0.8"/>
+                        </g>
+                        <path d="M 53 80 L 60 76 L 67 80 L 67 89 L 60 93 L 53 89 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.8"/>
+                        <text x="60" y="87" text-anchor="middle" fill="white" font-size="7" font-weight="bold">M</text>
+                    </svg>
+                </div>
+
+                <h1 style="font-size: 2em; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em;">Hey there! I'm <span style="color: #10b981;">Milo</span></h1>
+                <p style="color: #475569; font-size: 1.05em; margin: 8px 0 0 0; max-width: 500px; line-height: 1.7;">Your AI mental health companion. I use <strong>BERT neural networks</strong>, <strong>FAISS vector search</strong>, and <strong>CBT therapy techniques</strong> to understand how you're feeling — and help you feel better.</p>
+
+                <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                        <div style="background: rgba(99,102,241,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(99,102,241,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
+                            <div style="font-size: 1.3em; margin-bottom: 4px;">🧠</div>
+                            <div style="font-size: 0.75em; font-weight: 600; color: #4338ca;">Deep Analysis</div>
+                            <div style="font-size: 0.62em; color: #6366f1; margin-top: 2px;">6-dimension NLP scan</div>
+                        </div>
+                        <div style="background: rgba(16,185,129,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(16,185,129,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
+                            <div style="font-size: 1.3em; margin-bottom: 4px;">🎮</div>
+                            <div style="font-size: 0.75em; font-weight: 600; color: #065f46;">Emotion Challenge</div>
+                            <div style="font-size: 0.62em; color: #10b981; margin-top: 2px;">Test your EQ vs AI</div>
+                        </div>
+                        <div style="background: rgba(245,158,11,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(245,158,11,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
+                            <div style="font-size: 1.3em; margin-bottom: 4px;">💬</div>
+                            <div style="font-size: 0.75em; font-weight: 600; color: #78350f;">CBT Companion</div>
+                            <div style="font-size: 0.62em; color: #d97706; margin-top: 2px;">Therapy-grade AI chat</div>
+                        </div>
+                        <div style="background: rgba(139,92,246,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(139,92,246,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
+                            <div style="font-size: 1.3em; margin-bottom: 4px;">🔬</div>
+                            <div style="font-size: 0.75em; font-weight: 600; color: #5b21b6;">ML Pipeline</div>
+                            <div style="font-size: 0.62em; color: #8b5cf6; margin-top: 2px;">See AI think live</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 28px; font-size: 0.8em; color: #94a3b8;">Navigate the tabs above to explore each stage → Start with <strong>🧠 Deep Analysis</strong></p>
+            </div>
+            <style>
+                @keyframes particle-float {
+                    0%, 100% { transform: translateY(0) translateX(0); }
+                    25% { transform: translateY(-20px) translateX(10px); }
+                    50% { transform: translateY(-10px) translateX(-5px); }
+                    75% { transform: translateY(-25px) translateX(8px); }
+                }
+            </style>
+            """)
+
         with gr.Tab("🧠 Deep Analysis"):
             gr.HTML(milo_guide("Welcome! Paste any text about how you're feeling and I'll run it through 6 analysis dimensions — classification, emotions, cognition, linguistics, risk scoring, and personalized guidance. The more you write, the richer the insights! 🔬", "happy"))
             with gr.Row():
@@ -1332,6 +1589,35 @@ with gr.Blocks(
                 ["I had a productive week! Feeling good, spent time with friends, exercised, and slept well. Looking forward to the weekend."],
                 ["I'm nervous about my future. I feel stuck in a relationship and can't understand if it's good or not. The uncertainty is overwhelming."],
             ], inputs=text_input, label="")
+
+        with gr.Tab("🎮 Emotion Challenge"):
+            gr.HTML(milo_guide("Test your emotional intelligence against the AI! Read a text passage, guess the dominant emotion, then see if you match the ML model's prediction. Each round teaches you how NLP detects feelings. 🎯", "celebrate"))
+            challenge_idx = gr.State(value=0)
+            challenge_text_display = gr.Textbox(label="📖 Read this text and guess the dominant emotion:", value=EMOTION_CHALLENGE_TEXTS[0]["text"], lines=3, interactive=False)
+            with gr.Row():
+                guess_input = gr.Radio(choices=["anger", "sadness", "fear", "joy", "disgust", "surprise", "trust", "anticipation"], label="🤔 Your guess — which emotion dominates?")
+            with gr.Row():
+                submit_guess = gr.Button("✅ Check My Answer", variant="primary", scale=2)
+                next_challenge = gr.Button("⏭️ Next Challenge", variant="secondary", scale=1)
+            challenge_result = gr.HTML()
+
+            submit_guess.click(emotion_challenge, inputs=[guess_input, challenge_idx], outputs=[challenge_result])
+            def advance_challenge(idx):
+                new_idx = (int(idx) + 1) % len(EMOTION_CHALLENGE_TEXTS)
+                return new_idx, EMOTION_CHALLENGE_TEXTS[new_idx]["text"], ""
+            next_challenge.click(advance_challenge, inputs=[challenge_idx], outputs=[challenge_idx, challenge_text_display, challenge_result])
+
+        with gr.Tab("🔬 ML Pipeline"):
+            gr.HTML(milo_guide("See the AI think in real-time! Enter any text and watch it flow through all 4 stages of the neural network pipeline — tokenization, embedding, vector search, and classification. This is what happens inside the model. 🧪", "thinking"))
+            pipeline_input = gr.Textbox(label="📝 Enter text to visualize", placeholder="Type anything and watch the ML pipeline process it step-by-step...", lines=3)
+            pipeline_btn = gr.Button("🔬 Visualize Pipeline", variant="primary", size="lg")
+            pipeline_output = gr.HTML()
+            pipeline_btn.click(ml_pipeline_visualize, inputs=[pipeline_input], outputs=[pipeline_output])
+            gr.Examples(examples=[
+                ["I'm terrified of failing my exams. Everyone will be disappointed in me."],
+                ["Today was amazing! Got a new job and celebrated with friends."],
+                ["I feel numb and empty. Nothing brings me joy anymore."],
+            ], inputs=pipeline_input, label="")
 
         with gr.Tab("🔄 Thought Reframer"):
             gr.HTML(milo_guide("Got a negative thought stuck in your head? Type it below and I'll identify the thinking traps and help you see it from a healthier angle. This is based on CBT — the gold-standard therapy technique! 🧠", "thinking"))
