@@ -1,9 +1,12 @@
 import os
+import hashlib
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
+CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", ".cache")
+FAISS_CACHE = os.path.join(CACHE_DIR, "faiss_index")
 
 KNOWLEDGE_BASE = [
     {
@@ -78,12 +81,26 @@ KNOWLEDGE_BASE = [
 
 class RAGPipeline:
     def __init__(self):
+        os.makedirs(CACHE_DIR, exist_ok=True)
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            cache_folder=os.path.join(CACHE_DIR, "models"),
         )
-        self.vector_store = self._build_vector_store()
+        self.vector_store = self._load_or_build_vector_store()
 
-    def _build_vector_store(self):
+    def _get_kb_hash(self):
+        content = "".join(item["content"] for item in KNOWLEDGE_BASE)
+        return hashlib.md5(content.encode()).hexdigest()[:12]
+
+    def _load_or_build_vector_store(self):
+        index_path = os.path.join(FAISS_CACHE, self._get_kb_hash())
+        if os.path.exists(index_path):
+            return FAISS.load_local(
+                index_path, self.embeddings, allow_dangerous_deserialization=True
+            )
+        return self._build_vector_store(index_path)
+
+    def _build_vector_store(self, save_path=None):
         documents = [
             Document(page_content=item["content"], metadata={"topic": item["topic"]})
             for item in KNOWLEDGE_BASE
@@ -95,6 +112,9 @@ class RAGPipeline:
         splits = text_splitter.split_documents(documents)
 
         vector_store = FAISS.from_documents(splits, self.embeddings)
+        if save_path:
+            os.makedirs(save_path, exist_ok=True)
+            vector_store.save_local(save_path)
         return vector_store
 
     def retrieve_context(self, query: str, k: int = 3) -> list[dict]:

@@ -16,6 +16,9 @@ saved_models/
 data/reddit_mental_health.csv
 data/faiss_index/
 
+# Cache
+.cache/
+
 # Node
 node_modules/
 frontend/node_modules/
