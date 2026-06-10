@@ -606,36 +606,141 @@ def full_analysis(text: str):
     return result_html
 
 
-def generate_smart_response(message, classification, emotions, distortions):
+CHAT_MEMORY = {"turn_count": 0, "prev_labels": [], "prev_emotions": [], "topics_discussed": set(), "user_name": None}
+
+CBT_TECHNIQUES = {
+    "socratic": [
+        "What evidence do you have for that thought? And what evidence goes against it?",
+        "If a close friend told you this, what would you say to them?",
+        "Is there another way to look at this situation?",
+        "What's the worst that could happen? The best? The most realistic?",
+        "Will this matter in 5 years? 5 months? 5 weeks?",
+    ],
+    "behavioral": [
+        "What's one small action you could take in the next 10 minutes that might shift your mood by even 1%?",
+        "When was the last time you felt differently? What were you doing?",
+        "Could you try a behavioral experiment — test that thought against reality?",
+        "What would your day look like if you acted 'as if' things were okay, just for one hour?",
+    ],
+    "grounding": [
+        "Let's ground you in the present. Take a breath and tell me: what can you physically see right now?",
+        "Try this with me: breathe in for 4 counts... hold for 7... slowly out for 8. How does that feel?",
+        "Place both feet flat on the floor. Feel the ground. You're here, you're safe, this moment will pass.",
+        "Name 3 things you can touch right now. Focus on their texture. This is grounding.",
+    ],
+    "validation": [
+        "That sounds genuinely difficult. Your feelings make complete sense given what you're going through.",
+        "You're not being dramatic or oversensitive. What you're feeling is a natural human response.",
+        "I want you to know — it's okay to not be okay. You don't have to perform strength right now.",
+        "The fact that you're talking about this shows real courage. Most people avoid this.",
+    ],
+    "reframe": [
+        "I hear the absolute language there — 'always', 'never'. What if we soften it? What's a more nuanced version?",
+        "You mentioned what's going wrong. Can we also acknowledge one thing — even tiny — that isn't wrong?",
+        "That sounds like your inner critic speaking. If you stepped outside that voice, what else might be true?",
+        "Let's separate the situation from the interpretation. What actually happened, versus the story your mind added?",
+    ],
+}
+
+
+def generate_smart_response(message, classification, emotions, distortions, history):
     label = classification["label"]
-    top_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:2]
+    top_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:3]
     top_emotion = top_emotions[0][0] if top_emotions else "neutral"
     rag_response = rag_pipeline.generate_response(message, classification)
 
-    openings = {
-        "sadness": ["I can feel the weight of what you're carrying.", "What you're going through sounds really heavy.", "The sadness you're describing is real and valid — I'm here."],
-        "fear": ["I understand that sense of unease.", "It sounds like your mind is working overtime to protect you.", "The worry you're feeling makes complete sense."],
-        "anger": ["That frustration is completely understandable.", "Your anger is telling you something important.", "It makes sense you'd feel that way."],
-        "joy": ["It's wonderful to hear that energy!", "I'm genuinely glad things are going well.", "That's the kind of moment worth savoring."],
-        "trust": ["Thank you for feeling comfortable sharing that.", "I appreciate your openness."],
-        "anticipation": ["It sounds like you're processing a lot about what's ahead.", "That forward-looking perspective shows real engagement."],
-    }
-    opening = random.choice(openings.get(top_emotion, ["Thank you for sharing that with me.", "I hear what you're saying."]))
+    CHAT_MEMORY["turn_count"] += 1
+    CHAT_MEMORY["prev_labels"].append(label)
+    CHAT_MEMORY["prev_emotions"].append(top_emotion)
+    turn = CHAT_MEMORY["turn_count"]
+
+    is_first = turn <= 1
+    is_recurring = len(CHAT_MEMORY["prev_labels"]) >= 3 and len(set(CHAT_MEMORY["prev_labels"][-3:])) == 1
+    is_improving = len(CHAT_MEMORY["prev_labels"]) >= 2 and CHAT_MEMORY["prev_labels"][-1] in ["normal"] and CHAT_MEMORY["prev_labels"][-2] not in ["normal"]
+
+    if is_first:
+        opening = random.choice([
+            "Thank you for opening up to me.",
+            "I'm glad you're here. Let's talk through this together.",
+            "I hear you. Let's unpack this at your pace.",
+        ])
+    elif is_improving:
+        opening = random.choice([
+            "I notice a shift — you seem to be in a better space than before. That's meaningful.",
+            "Something feels different in your words this time. There's more lightness here.",
+        ])
+    elif is_recurring:
+        opening = random.choice([
+            "I notice this theme keeps coming up for you. That persistence tells me it's important — let's go deeper.",
+            "We keep returning to this territory. That's not weakness — it's your mind asking for resolution.",
+        ])
+    else:
+        openings_by_emotion = {
+            "sadness": [
+                "I can feel the heaviness in what you're sharing.",
+                "That sounds like a really painful place to be right now.",
+                "The sadness in your words is palpable. I'm here with you in it.",
+            ],
+            "fear": [
+                "Your nervous system is working overtime right now, and that's exhausting.",
+                "I can sense the anxiety pulling at you. Let's see if we can loosen its grip.",
+                "That worry makes sense — your brain is trying to protect you, even when it overreacts.",
+            ],
+            "anger": [
+                "That frustration is valid. Something important to you is being threatened or violated.",
+                "I hear real fire in your words. Anger often protects something vulnerable underneath.",
+                "You have every right to feel upset. Let's channel that energy somewhere useful.",
+            ],
+            "joy": [
+                "I love that energy! Let's build on this momentum.",
+                "This is the version of you that shows up when things align. Worth celebrating.",
+                "That positive energy is contagious. What's fueling it today?",
+            ],
+        }
+        opening = random.choice(openings_by_emotion.get(top_emotion, [
+            "Thank you for sharing that. Let's work through it together.",
+            "I hear you. Let me reflect back what I'm picking up.",
+        ]))
+
+    if label == "severe":
+        technique = random.choice(CBT_TECHNIQUES["validation"])
+        strategy = "\n\n🆘 **Important:** What you're going through is real, and you deserve immediate support. Please reach out to the 988 Suicide & Crisis Lifeline (call/text 988) or text HOME to 741741. A trained human is available 24/7."
+    elif label == "depression":
+        technique_pool = "validation" if turn <= 2 else random.choice(["socratic", "behavioral", "reframe"])
+        technique = random.choice(CBT_TECHNIQUES[technique_pool])
+        strategy = f"\n\n💭 **CBT prompt:** {technique}"
+    elif label == "anxiety":
+        technique_pool = "grounding" if "panic" in message.lower() or "breathe" in message.lower() else random.choice(["socratic", "reframe", "grounding"])
+        technique = random.choice(CBT_TECHNIQUES[technique_pool])
+        strategy = f"\n\n💭 **CBT prompt:** {technique}"
+    elif label == "stress":
+        technique = random.choice(CBT_TECHNIQUES["behavioral"] + CBT_TECHNIQUES["socratic"])
+        strategy = f"\n\n💭 **CBT prompt:** {technique}"
+    else:
+        technique = random.choice(CBT_TECHNIQUES["behavioral"])
+        strategy = f"\n\n✨ **Reflection:** {technique}"
 
     distortion_note = ""
     if distortions:
         d = distortions[0]
-        distortion_note = f"\n\n🔍 **Pattern noticed:** I see some *{d['type']}* in your words — {d['description'].lower()}. {d['reframe']}"
+        reframe_q = random.choice(CBT_TECHNIQUES["reframe"])
+        distortion_note = f"\n\n🔍 **I noticed a pattern** — *{d['type']}*: {d['description']}.\n{reframe_q}"
 
-    strategies = {
-        "anxiety": "\n\n🧘 **Try this:** 4-7-8 breathing — in for 4, hold for 7, out for 8. Repeat 3 times. This activates your calm-down system.",
-        "depression": "\n\n🌱 **One small step:** What's one tiny thing within reach right now that might bring even 1% comfort?",
-        "stress": "\n\n📋 **Quick reset:** What are the 3 most pressing things? Circle the ONE you can actually control right now.",
-        "severe": "\n\n🆘 **You matter:** Please reach out to 988 (call/text) or text HOME to 741741. A real person is ready to help right now.",
-        "normal": "\n\n✨ **Keep going:** What you're doing is working. Consider noting what's going well today.",
-    }
-    strategy = strategies.get(label, "")
-    return f"{opening}\n\n{rag_response}{distortion_note}{strategy}"
+    mid_section = rag_response
+
+    followup = ""
+    if turn >= 2 and label != "severe":
+        followups = [
+            "\n\nWhat comes up for you when you hear that?",
+            "\n\nDoes that resonate, or am I off base?",
+            "\n\nTake a moment with that. What's your gut reaction?",
+            "\n\nHow does it land when I say that back to you?",
+            "",
+            "",
+        ]
+        followup = random.choice(followups)
+
+    return f"{opening}\n\n{mid_section}{distortion_note}{strategy}{followup}"
 
 
 def chat_response(message: str, history: list):
@@ -644,10 +749,12 @@ def chat_response(message: str, history: list):
     classification = classify_text(message)
     emotions = analyze_emotions(message)
     distortions = detect_cognitive_distortions(message)
-    response = generate_smart_response(message, classification, emotions, distortions)
+    response = generate_smart_response(message, classification, emotions, distortions, history)
+
     top_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:3]
-    emotion_tags = " · ".join([f"{e[0]} {e[1]*100:.0f}%" for e in top_emotions if e[1] > 0.05])
-    badge = f"\n\n---\n📊 *{classification['label'].upper()} ({classification['confidence']*100:.0f}%)* | {emotion_tags}"
+    emotion_tags = " · ".join([f"{e[0]} {e[1]*100:.0f}%" for e in top_emotions if e[1] > 0.1])
+    badge = f"\n\n---\n`🧠 {classification['label'].upper()}` · `{classification['confidence']*100:.0f}%` · {emotion_tags}"
+
     history = history + [{"role": "user", "content": message}, {"role": "assistant", "content": response + badge}]
     return history, ""
 
@@ -1065,6 +1172,71 @@ def get_resources(category="All"):
 CSS = """
 footer {display: none !important;}
 .gradio-container {max-width: 1400px !important;}
+
+/* Glassmorphism panels */
+.panel, .block {
+    backdrop-filter: blur(12px) !important;
+}
+.tabs > .tab-nav {
+    background: rgba(255,255,255,0.7) !important;
+    backdrop-filter: blur(8px) !important;
+    border-radius: 14px !important;
+    padding: 4px !important;
+    border: 1px solid rgba(226,232,240,0.8) !important;
+    margin-bottom: 8px !important;
+}
+.tabs > .tab-nav > button {
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    font-size: 0.82em !important;
+    padding: 8px 12px !important;
+    transition: all 0.2s ease !important;
+}
+.tabs > .tab-nav > button.selected {
+    background: white !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+    color: #4f46e5 !important;
+}
+/* Chat styling */
+.chatbot .message {
+    border-radius: 18px !important;
+}
+/* Smooth transitions */
+.block, .form, .panel {
+    transition: all 0.2s ease !important;
+}
+/* Button styling */
+button.primary {
+    background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(79,70,229,0.25) !important;
+    transition: all 0.2s ease !important;
+}
+button.primary:hover {
+    box-shadow: 0 6px 20px rgba(79,70,229,0.35) !important;
+    transform: translateY(-1px) !important;
+}
+button.secondary {
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(226,232,240,0.8) !important;
+    transition: all 0.15s ease !important;
+}
+button.secondary:hover {
+    background: rgba(99,102,241,0.05) !important;
+    border-color: rgba(99,102,241,0.3) !important;
+    color: #4f46e5 !important;
+}
+/* Input styling */
+textarea, input[type="text"] {
+    border-radius: 12px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    transition: all 0.2s ease !important;
+}
+textarea:focus, input[type="text"]:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+}
+
 @keyframes milo-bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
@@ -1193,26 +1365,49 @@ with gr.Blocks(
             gad_btn.click(compute_gad7_score, inputs=gad_inputs, outputs=gad_output)
 
         with gr.Tab("💬 AI Companion"):
-            gr.HTML(milo_guide("I'm your therapeutic AI companion. I detect emotions, spot thinking patterns, and provide personalized coping strategies. Each response is unique to YOUR situation. Share anything — I'm here without judgment. 🌿", "caring"))
-            chatbot = gr.Chatbot(height=440, type="messages", value=[{"role": "assistant", "content": "Hey! 🌱 I'm Milo, your MindGuard companion. I use multi-dimensional NLP to understand not just *what* you're saying, but *how* you're feeling and *how* you're thinking.\n\nI can help with:\n• Processing difficult emotions\n• Spotting unhelpful thinking patterns\n• Evidence-based coping strategies\n• Breathing & grounding techniques\n• Being a safe space to vent\n\nWhat's on your mind?"}], show_copy_button=True)
+            gr.HTML("""
+            <div style="background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(16,185,129,0.05) 100%); backdrop-filter: blur(10px); border: 1px solid rgba(99,102,241,0.1); border-radius: 18px; padding: 18px 22px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; font-size: 0.9em;">CBT-Trained AI Companion</div>
+                        <div style="font-size: 0.72em; color: #64748b;">Validates → Identifies patterns → Reframes → Suggests strategies · Powered by NLP + RAG</div>
+                    </div>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                        <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                        <span style="font-size: 0.65em; color: #10b981; font-weight: 500;">Online</span>
+                    </div>
+                </div>
+            </div>
+            <style>@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}</style>
+            """)
+            chatbot = gr.Chatbot(
+                height=460, type="messages",
+                value=[{"role": "assistant", "content": "Hey there! 🌱 I'm your MindGuard AI companion — trained in Cognitive Behavioral Therapy techniques.\n\nI don't just respond to what you say — I analyze *how* you're feeling (8 emotion dimensions), detect thinking patterns (cognitive distortions), and tailor evidence-based strategies to your specific state.\n\nWhether you're stressed, anxious, stuck in a loop, or just need someone to listen without judgment — I'm here.\n\n**What's on your mind today?**"}],
+                show_copy_button=True,
+            )
             with gr.Row():
-                chat_input = gr.Textbox(placeholder="Share what's on your mind...", label="", scale=5, container=False)
-                chat_btn = gr.Button("Send", variant="primary", scale=1)
+                chat_input = gr.Textbox(placeholder="Type your thoughts here...", label="", scale=5, container=False)
+                chat_btn = gr.Button("→", variant="primary", scale=1, min_width=50)
+            gr.HTML("""<div style="font-size: 0.72em; color: #94a3b8; margin: 6px 0 4px 0;">Quick prompts:</div>""")
             with gr.Row():
-                q1 = gr.Button("😔 Low mood", size="sm", variant="secondary")
-                q2 = gr.Button("😰 Anxious", size="sm", variant="secondary")
-                q3 = gr.Button("😤 Overwhelmed", size="sm", variant="secondary")
-                q4 = gr.Button("😊 Good day", size="sm", variant="secondary")
-                q5 = gr.Button("🧘 Coping help", size="sm", variant="secondary")
-                q6 = gr.Button("💔 Relationship", size="sm", variant="secondary")
+                q1 = gr.Button("I'm feeling anxious about exams", size="sm", variant="secondary")
+                q2 = gr.Button("I can't stop procrastinating", size="sm", variant="secondary")
+                q3 = gr.Button("I feel lonely and disconnected", size="sm", variant="secondary")
+            with gr.Row():
+                q4 = gr.Button("Help me reframe a negative thought", size="sm", variant="secondary")
+                q5 = gr.Button("I'm having a good day!", size="sm", variant="secondary")
+                q6 = gr.Button("Guide me through a breathing exercise", size="sm", variant="secondary")
             chat_btn.click(chat_response, [chat_input, chatbot], [chatbot, chat_input])
             chat_input.submit(chat_response, [chat_input, chatbot], [chatbot, chat_input])
-            q1.click(lambda h: chat_response("I've been feeling really down lately. Nothing brings me joy anymore.", h), [chatbot], [chatbot, chat_input])
-            q2.click(lambda h: chat_response("I can't stop anxious thoughts. My mind races with worst-case scenarios.", h), [chatbot], [chatbot, chat_input])
-            q3.click(lambda h: chat_response("Everything is piling up and I feel like I'm drowning.", h), [chatbot], [chatbot, chat_input])
-            q4.click(lambda h: chat_response("Having a good day! Feeling grateful and productive.", h), [chatbot], [chatbot, chat_input])
-            q5.click(lambda h: chat_response("I need coping strategies. Can you guide me through a breathing exercise?", h), [chatbot], [chatbot, chat_input])
-            q6.click(lambda h: chat_response("I'm stuck in a confusing relationship and don't know if it's healthy.", h), [chatbot], [chatbot, chat_input])
+            q1.click(lambda h: chat_response("I'm feeling really anxious about my upcoming exams. I keep thinking I'm going to fail and my mind won't stop racing.", h), [chatbot], [chatbot, chat_input])
+            q2.click(lambda h: chat_response("I can't stop procrastinating. I have so much to do but I just scroll my phone and feel guilty about it.", h), [chatbot], [chatbot, chat_input])
+            q3.click(lambda h: chat_response("I feel lonely and disconnected from everyone around me. It's like nobody really understands what I'm going through.", h), [chatbot], [chatbot, chat_input])
+            q4.click(lambda h: chat_response("I keep thinking 'I'm a failure and nothing I do ever works out.' Can you help me see this differently?", h), [chatbot], [chatbot, chat_input])
+            q5.click(lambda h: chat_response("I'm actually having a really good day today! Feeling productive, connected, and grateful.", h), [chatbot], [chatbot, chat_input])
+            q6.click(lambda h: chat_response("I'm feeling overwhelmed right now. Can you guide me through a breathing or grounding exercise?", h), [chatbot], [chatbot, chat_input])
 
         with gr.Tab("🌡️ Daily Check-in"):
             gr.HTML(milo_guide("Quick daily wellness check! Rate 4 dimensions of your day and I'll track your patterns over time. Consistency is key — even 30 seconds a day builds powerful self-awareness. 📅", "happy"))
