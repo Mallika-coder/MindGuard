@@ -104,57 +104,125 @@ GAD7_QUESTIONS = [
 
 def milo_guide(message, mood="neutral"):
     mood_colors = {
-        "neutral": ("#10b981", "#d1fae5"),
-        "happy": ("#10b981", "#d1fae5"),
-        "thinking": ("#6366f1", "#eef2ff"),
-        "caring": ("#ec4899", "#fce7f3"),
-        "alert": ("#ef4444", "#fef2f2"),
-        "calm": ("#06b6d4", "#ecfeff"),
-        "celebrate": ("#f59e0b", "#fefce8"),
+        "neutral": ("#10b981", "#d1fae5", "#065f46"),
+        "happy": ("#10b981", "#d1fae5", "#065f46"),
+        "thinking": ("#6366f1", "#eef2ff", "#312e81"),
+        "caring": ("#ec4899", "#fce7f3", "#9d174d"),
+        "alert": ("#ef4444", "#fef2f2", "#991b1b"),
+        "calm": ("#06b6d4", "#ecfeff", "#164e63"),
+        "celebrate": ("#f59e0b", "#fefce8", "#78350f"),
     }
-    primary, bg = mood_colors.get(mood, ("#10b981", "#d1fae5"))
+    primary, bg, text_dark = mood_colors.get(mood, ("#10b981", "#d1fae5", "#065f46"))
 
     return f"""
-    <div style="display: flex; align-items: center; gap: 20px; background: linear-gradient(135deg, {bg} 0%, white 100%); border: 1px solid {primary}44; border-radius: 20px; padding: 20px 24px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 4px 20px {primary}15;">
-        <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, {primary}15, transparent); border-radius: 50%;"></div>
-        <!-- Milo Character SVG -->
-        <div style="flex-shrink: 0; position: relative;">
-            <svg width="80" height="80" viewBox="0 0 100 100" style="filter: drop-shadow(0 4px 8px {primary}33);">
-                <!-- Body -->
-                <circle cx="50" cy="55" r="30" fill="{primary}" opacity="0.15"/>
-                <!-- Head -->
-                <circle cx="50" cy="38" r="22" fill="{primary}"/>
-                <!-- Face highlight -->
-                <circle cx="50" cy="35" r="18" fill="{primary}" opacity="0.8"/>
-                <ellipse cx="50" cy="32" rx="14" ry="10" fill="white" opacity="0.2"/>
-                <!-- Eyes -->
-                <ellipse cx="43" cy="36" rx="3.5" ry="4" fill="white"/>
-                <ellipse cx="57" cy="36" rx="3.5" ry="4" fill="white"/>
-                <circle cx="43" cy="37" r="2" fill="#1e293b"/>
-                <circle cx="57" cy="37" r="2" fill="#1e293b"/>
-                <circle cx="44" cy="35.5" r="0.8" fill="white"/>
-                <circle cx="58" cy="35.5" r="0.8" fill="white"/>
-                <!-- Smile -->
-                <path d="M 42 44 Q 50 51 58 44" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                <!-- Blush -->
-                <circle cx="38" cy="42" r="3" fill="#fecdd3" opacity="0.6"/>
-                <circle cx="62" cy="42" r="3" fill="#fecdd3" opacity="0.6"/>
-                <!-- Shield badge -->
-                <path d="M 65 20 L 70 18 L 75 20 L 75 26 L 70 29 L 65 26 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.5"/>
-                <text x="70" y="25" text-anchor="middle" fill="white" font-size="5" font-weight="bold">M</text>
-                <!-- Wave hand animation -->
-                <g style="animation: milo-wave 2s ease-in-out infinite; transform-origin: 75px 50px;">
-                    <circle cx="78" cy="50" r="5" fill="{primary}"/>
-                    <circle cx="78" cy="50" r="3.5" fill="{primary}" opacity="0.8"/>
-                </g>
-            </svg>
-        </div>
-        <div style="flex: 1; position: relative; z-index: 1;">
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <span style="font-size: 0.72em; color: {primary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Milo</span>
-                <span style="font-size: 0.6em; background: {primary}22; color: {primary}; padding: 1px 6px; border-radius: 6px;">AI Guide</span>
+    <div style="display: flex; align-items: center; gap: 0; background: linear-gradient(135deg, {bg} 0%, white 50%, {bg}44 100%); border: 1.5px solid {primary}33; border-radius: 24px; padding: 0; margin-bottom: 22px; position: relative; overflow: hidden; box-shadow: 0 8px 32px {primary}12, 0 2px 8px rgba(0,0,0,0.04);">
+
+        <!-- Decorative background elements -->
+        <div style="position: absolute; top: -40px; right: -40px; width: 150px; height: 150px; background: radial-gradient(circle, {primary}10, transparent 70%); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -20px; left: 100px; width: 80px; height: 80px; background: radial-gradient(circle, {primary}08, transparent 70%); border-radius: 50%;"></div>
+
+        <!-- Milo 3D Character Container -->
+        <div style="flex-shrink: 0; width: 140px; min-height: 130px; display: flex; align-items: center; justify-content: center; position: relative; perspective: 400px; padding: 10px;">
+            <div style="animation: milo-float 3s ease-in-out infinite; transform-style: preserve-3d;">
+                <svg width="120" height="120" viewBox="0 0 120 120" style="filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15)) drop-shadow(0 2px 4px {primary}44);">
+                    <defs>
+                        <radialGradient id="milo-head-{mood}" cx="40%" cy="35%" r="60%">
+                            <stop offset="0%" stop-color="{primary}" stop-opacity="0.95"/>
+                            <stop offset="100%" stop-color="{primary}" stop-opacity="0.7"/>
+                        </radialGradient>
+                        <radialGradient id="milo-body-{mood}" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" stop-color="{primary}" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="{primary}" stop-opacity="0.15"/>
+                        </radialGradient>
+                        <radialGradient id="milo-glow-{mood}" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="{primary}" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="{primary}" stop-opacity="0"/>
+                        </radialGradient>
+                        <filter id="milo-shadow-{mood}">
+                            <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="{primary}" flood-opacity="0.3"/>
+                        </filter>
+                    </defs>
+
+                    <!-- Ambient glow -->
+                    <circle cx="60" cy="65" r="50" fill="url(#milo-glow-{mood})"/>
+
+                    <!-- Body / Torso -->
+                    <ellipse cx="60" cy="88" rx="25" ry="22" fill="url(#milo-body-{mood})" filter="url(#milo-shadow-{mood})"/>
+
+                    <!-- Neck -->
+                    <rect x="52" y="62" width="16" height="14" rx="8" fill="{primary}" opacity="0.5"/>
+
+                    <!-- Head (3D sphere illusion) -->
+                    <circle cx="60" cy="44" r="28" fill="url(#milo-head-{mood})" filter="url(#milo-shadow-{mood})"/>
+
+                    <!-- Head highlight (3D lighting) -->
+                    <ellipse cx="52" cy="34" rx="16" ry="12" fill="white" opacity="0.18"/>
+                    <ellipse cx="48" cy="30" rx="8" ry="5" fill="white" opacity="0.12"/>
+
+                    <!-- Eyes (3D depth) -->
+                    <ellipse cx="50" cy="43" rx="5.5" ry="6.5" fill="white" filter="url(#milo-shadow-{mood})"/>
+                    <ellipse cx="70" cy="43" rx="5.5" ry="6.5" fill="white" filter="url(#milo-shadow-{mood})"/>
+
+                    <!-- Irises with gradient -->
+                    <circle cx="51" cy="44" r="3.2" fill="#1e293b"/>
+                    <circle cx="71" cy="44" r="3.2" fill="#1e293b"/>
+
+                    <!-- Pupils -->
+                    <circle cx="51" cy="44" r="1.5" fill="#000"/>
+                    <circle cx="71" cy="44" r="1.5" fill="#000"/>
+
+                    <!-- Eye sparkle (life) -->
+                    <circle cx="52.5" cy="42" r="1.2" fill="white" opacity="0.9"/>
+                    <circle cx="72.5" cy="42" r="1.2" fill="white" opacity="0.9"/>
+                    <circle cx="49" cy="45.5" r="0.6" fill="white" opacity="0.5"/>
+                    <circle cx="69" cy="45.5" r="0.6" fill="white" opacity="0.5"/>
+
+                    <!-- Eyebrows -->
+                    <path d="M 44 35 Q 50 32 56 35" fill="none" stroke="{primary}" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+                    <path d="M 64 35 Q 70 32 76 35" fill="none" stroke="{primary}" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+
+                    <!-- Nose (subtle) -->
+                    <ellipse cx="60" cy="50" rx="2" ry="1.5" fill="{primary}" opacity="0.3"/>
+
+                    <!-- Smile (3D curve) -->
+                    <path d="M 50 55 Q 60 64 70 55" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M 52 56 Q 60 62 68 56" fill="white" opacity="0.15"/>
+
+                    <!-- Blush cheeks (3D roundness) -->
+                    <ellipse cx="42" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
+                    <ellipse cx="78" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
+
+                    <!-- Left arm/hand waving -->
+                    <g style="animation: milo-wave 2.5s ease-in-out infinite; transform-origin: 28px 75px;">
+                        <path d="M 35 75 Q 25 68 20 58" fill="none" stroke="{primary}" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+                        <circle cx="19" cy="56" r="5" fill="{primary}" opacity="0.7"/>
+                    </g>
+
+                    <!-- Right arm -->
+                    <path d="M 85 75 Q 92 80 95 88" fill="none" stroke="{primary}" stroke-width="6" stroke-linecap="round" opacity="0.4"/>
+
+                    <!-- Shield badge on chest -->
+                    <path d="M 53 80 L 60 76 L 67 80 L 67 89 L 60 93 L 53 89 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.8"/>
+                    <text x="60" y="87" text-anchor="middle" fill="white" font-size="7" font-weight="bold">M</text>
+
+                    <!-- Stethoscope hint -->
+                    <path d="M 48 70 Q 45 76 50 80" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                    <circle cx="50" cy="81" r="2" fill="#94a3b8" opacity="0.4"/>
+                </svg>
             </div>
-            <div style="color: #1e293b; font-size: 0.9em; line-height: 1.65; font-weight: 400;">{message}</div>
+        </div>
+
+        <!-- Speech bubble -->
+        <div style="flex: 1; padding: 20px 24px 20px 0; position: relative; z-index: 1;">
+            <div style="position: relative; background: white; border: 1px solid {primary}22; border-radius: 16px; padding: 16px 18px; box-shadow: 0 2px 8px {primary}08;">
+                <!-- Speech bubble arrow -->
+                <div style="position: absolute; left: -8px; top: 20px; width: 16px; height: 16px; background: white; border-left: 1px solid {primary}22; border-bottom: 1px solid {primary}22; transform: rotate(45deg);"></div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 0.7em; color: {primary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Milo</span>
+                    <span style="font-size: 0.58em; background: {primary}15; color: {primary}; padding: 2px 7px; border-radius: 6px; font-weight: 500;">AI Health Guide</span>
+                </div>
+                <div style="color: {text_dark}; font-size: 0.88em; line-height: 1.7; font-weight: 400;">{message}</div>
+            </div>
         </div>
     </div>
     """
@@ -999,12 +1067,20 @@ footer {display: none !important;}
 .gradio-container {max-width: 1400px !important;}
 @keyframes milo-bounce {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    50% { transform: translateY(-4px); }
+}
+@keyframes milo-float {
+    0%, 100% { transform: translateY(0) rotateY(-3deg) rotateX(2deg); }
+    33% { transform: translateY(-6px) rotateY(2deg) rotateX(-1deg); }
+    66% { transform: translateY(-3px) rotateY(-1deg) rotateX(1deg); }
 }
 @keyframes milo-wave {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(15deg); }
-    75% { transform: rotate(-5deg); }
+    0%, 60%, 100% { transform: rotate(0deg); }
+    10% { transform: rotate(20deg); }
+    20% { transform: rotate(-10deg); }
+    30% { transform: rotate(15deg); }
+    40% { transform: rotate(-5deg); }
+    50% { transform: rotate(10deg); }
 }
 """
 
