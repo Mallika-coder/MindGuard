@@ -1525,120 +1525,122 @@ with gr.Blocks(
 
         with gr.Tab("🚪 Welcome"):
             gr.HTML("""
-            <div style="font-family: 'Inter', sans-serif; min-height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden;">
-                <!-- Animated background particles -->
-                <div style="position: absolute; inset: 0; pointer-events: none;">
-                    <div style="position: absolute; top: 10%; left: 15%; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; animation: particle-float 6s ease-in-out infinite; opacity: 0.4;"></div>
-                    <div style="position: absolute; top: 30%; right: 20%; width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: particle-float 8s ease-in-out infinite 1s; opacity: 0.3;"></div>
-                    <div style="position: absolute; bottom: 25%; left: 25%; width: 5px; height: 5px; background: #f59e0b; border-radius: 50%; animation: particle-float 7s ease-in-out infinite 2s; opacity: 0.4;"></div>
-                    <div style="position: absolute; top: 50%; right: 10%; width: 4px; height: 4px; background: #ec4899; border-radius: 50%; animation: particle-float 5s ease-in-out infinite 0.5s; opacity: 0.5;"></div>
-                    <div style="position: absolute; bottom: 40%; left: 10%; width: 7px; height: 7px; background: #8b5cf6; border-radius: 50%; animation: particle-float 9s ease-in-out infinite 3s; opacity: 0.3;"></div>
+            <div style="font-family: 'Inter', sans-serif; min-height: 80vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 50%, #e0e7ff 100%); margin: -16px; padding: 40px 20px; border-radius: 16px;">
+
+                <!-- Animated particles -->
+                <div style="position: absolute; inset: 0; pointer-events: none; overflow: hidden;">
+                    <div style="position: absolute; top: 8%; left: 12%; width: 8px; height: 8px; background: #6366f1; border-radius: 50%; animation: particle-float 7s ease-in-out infinite; opacity: 0.3;"></div>
+                    <div style="position: absolute; top: 20%; right: 15%; width: 12px; height: 12px; background: #10b981; border-radius: 50%; animation: particle-float 9s ease-in-out infinite 1s; opacity: 0.2;"></div>
+                    <div style="position: absolute; bottom: 30%; left: 8%; width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; animation: particle-float 6s ease-in-out infinite 2s; opacity: 0.35;"></div>
+                    <div style="position: absolute; top: 60%; right: 8%; width: 10px; height: 10px; background: #ec4899; border-radius: 50%; animation: particle-float 8s ease-in-out infinite 0.5s; opacity: 0.25;"></div>
+                    <div style="position: absolute; bottom: 15%; left: 30%; width: 5px; height: 5px; background: #8b5cf6; border-radius: 50%; animation: particle-float 10s ease-in-out infinite 3s; opacity: 0.3;"></div>
+                    <div style="position: absolute; top: 40%; left: 50%; width: 14px; height: 14px; background: #6366f1; border-radius: 50%; animation: particle-float 12s ease-in-out infinite 4s; opacity: 0.08;"></div>
+                    <!-- Gradient orbs -->
+                    <div style="position: absolute; top: -10%; right: -5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%); border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: -10%; left: -5%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(16,185,129,0.1), transparent 70%); border-radius: 50%;"></div>
                 </div>
 
-                <!-- Stage indicator -->
-                <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 6px; align-items: center;">
-                    <div style="width: 10px; height: 10px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 8px #6366f1;"></div>
-                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
-                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
-                    <div style="width: 10px; height: 10px; background: #e2e8f0; border-radius: 50%;"></div>
-                    <span style="font-size: 0.65em; color: #94a3b8; margin-left: 4px;">Stage 1/4</span>
-                </div>
+                <!-- Main content grid -->
+                <div style="position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; max-width: 1000px; width: 100%; align-items: center;">
 
-                <!-- Milo Large Welcome -->
-                <div style="animation: milo-float 3s ease-in-out infinite; margin-bottom: 20px;">
-                    <svg width="160" height="160" viewBox="0 0 120 120" style="filter: drop-shadow(0 12px 24px rgba(16,185,129,0.3));">
-                        <defs>
-                            <radialGradient id="milo-w-head" cx="40%" cy="35%" r="60%">
-                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.95"/>
-                                <stop offset="100%" stop-color="#059669" stop-opacity="0.8"/>
-                            </radialGradient>
-                            <radialGradient id="milo-w-glow" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
-                                <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
-                            </radialGradient>
-                        </defs>
-                        <circle cx="60" cy="60" r="55" fill="url(#milo-w-glow)"/>
-                        <ellipse cx="60" cy="88" rx="25" ry="22" fill="#10b981" opacity="0.2"/>
-                        <rect x="52" y="62" width="16" height="14" rx="8" fill="#10b981" opacity="0.4"/>
-                        <circle cx="60" cy="44" r="28" fill="url(#milo-w-head)"/>
-                        <ellipse cx="52" cy="34" rx="16" ry="12" fill="white" opacity="0.15"/>
-                        <ellipse cx="50" cy="43" rx="5.5" ry="6.5" fill="white"/>
-                        <ellipse cx="70" cy="43" rx="5.5" ry="6.5" fill="white"/>
-                        <circle cx="51" cy="44" r="3.2" fill="#1e293b"/>
-                        <circle cx="71" cy="44" r="3.2" fill="#1e293b"/>
-                        <circle cx="52.5" cy="42" r="1.3" fill="white"/>
-                        <circle cx="72.5" cy="42" r="1.3" fill="white"/>
-                        <path d="M 48 55 Q 60 66 72 55" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
-                        <ellipse cx="42" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
-                        <ellipse cx="78" cy="52" rx="5" ry="3.5" fill="#fecdd3" opacity="0.5"/>
-                        <g style="animation: milo-wave 2.5s ease-in-out infinite; transform-origin: 28px 75px;">
-                            <path d="M 35 75 Q 22 65 18 52" fill="none" stroke="#10b981" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
-                            <circle cx="17" cy="50" r="6" fill="#10b981" opacity="0.8"/>
-                        </g>
-                        <path d="M 53 80 L 60 76 L 67 80 L 67 89 L 60 93 L 53 89 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.8"/>
-                        <text x="60" y="87" text-anchor="middle" fill="white" font-size="7" font-weight="bold">M</text>
-                    </svg>
-                </div>
-
-                <h1 style="font-size: 2em; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em;">Hey there! I'm <span style="color: #10b981;">Milo</span></h1>
-                <p style="color: #475569; font-size: 1.05em; margin: 8px 0 0 0; max-width: 500px; line-height: 1.7;">Your AI mental health companion. I use <strong>BERT neural networks</strong>, <strong>FAISS vector search</strong>, and <strong>CBT therapy techniques</strong> to understand how you're feeling — and help you feel better.</p>
-
-                <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
-                        <div style="background: rgba(99,102,241,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(99,102,241,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
-                            <div style="font-size: 1.3em; margin-bottom: 4px;">🧠</div>
-                            <div style="font-size: 0.75em; font-weight: 600; color: #4338ca;">Deep Analysis</div>
-                            <div style="font-size: 0.62em; color: #6366f1; margin-top: 2px;">6-dimension NLP scan</div>
+                    <!-- Left: Milo character -->
+                    <div style="text-align: center;">
+                        <div style="animation: milo-float 3s ease-in-out infinite;">
+                            <svg width="220" height="220" viewBox="0 0 120 120" style="filter: drop-shadow(0 16px 32px rgba(16,185,129,0.25));">
+                                <defs>
+                                    <radialGradient id="milo-w-head" cx="40%" cy="35%" r="60%">
+                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.95"/>
+                                        <stop offset="100%" stop-color="#059669" stop-opacity="0.8"/>
+                                    </radialGradient>
+                                    <radialGradient id="milo-w-glow" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.2"/>
+                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                                    </radialGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="56" fill="url(#milo-w-glow)"/>
+                                <ellipse cx="60" cy="90" rx="26" ry="22" fill="#10b981" opacity="0.2"/>
+                                <rect x="51" y="63" width="18" height="15" rx="9" fill="#10b981" opacity="0.4"/>
+                                <circle cx="60" cy="44" r="29" fill="url(#milo-w-head)"/>
+                                <ellipse cx="51" cy="33" rx="17" ry="12" fill="white" opacity="0.15"/>
+                                <ellipse cx="49" cy="43" rx="6" ry="7" fill="white"/>
+                                <ellipse cx="71" cy="43" rx="6" ry="7" fill="white"/>
+                                <circle cx="50" cy="44" r="3.5" fill="#1e293b"/>
+                                <circle cx="72" cy="44" r="3.5" fill="#1e293b"/>
+                                <circle cx="51.5" cy="42" r="1.4" fill="white"/>
+                                <circle cx="73.5" cy="42" r="1.4" fill="white"/>
+                                <path d="M 47 56 Q 60 68 73 56" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                                <ellipse cx="40" cy="52" rx="5.5" ry="4" fill="#fecdd3" opacity="0.45"/>
+                                <ellipse cx="80" cy="52" rx="5.5" ry="4" fill="#fecdd3" opacity="0.45"/>
+                                <g style="animation: milo-wave 2.5s ease-in-out infinite; transform-origin: 25px 75px;">
+                                    <path d="M 33 76 Q 18 64 14 50" fill="none" stroke="#10b981" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+                                    <circle cx="13" cy="48" r="7" fill="#10b981" opacity="0.75"/>
+                                </g>
+                                <path d="M 85 76 Q 95 82 98 92" fill="none" stroke="#10b981" stroke-width="7" stroke-linecap="round" opacity="0.35"/>
+                                <path d="M 52 81 L 60 77 L 68 81 L 68 91 L 60 95 L 52 91 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.8"/>
+                                <text x="60" y="88" text-anchor="middle" fill="white" font-size="8" font-weight="bold">M</text>
+                            </svg>
                         </div>
-                        <div style="background: rgba(16,185,129,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(16,185,129,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
-                            <div style="font-size: 1.3em; margin-bottom: 4px;">🎮</div>
-                            <div style="font-size: 0.75em; font-weight: 600; color: #065f46;">Emotion Challenge</div>
-                            <div style="font-size: 0.62em; color: #10b981; margin-top: 2px;">Test your EQ vs AI</div>
-                        </div>
-                        <div style="background: rgba(245,158,11,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(245,158,11,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
-                            <div style="font-size: 1.3em; margin-bottom: 4px;">💬</div>
-                            <div style="font-size: 0.75em; font-weight: 600; color: #78350f;">CBT Companion</div>
-                            <div style="font-size: 0.62em; color: #d97706; margin-top: 2px;">Therapy-grade AI chat</div>
-                        </div>
-                        <div style="background: rgba(139,92,246,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(139,92,246,0.15); border-radius: 14px; padding: 14px 18px; width: 160px; text-align: center;">
-                            <div style="font-size: 1.3em; margin-bottom: 4px;">🔬</div>
-                            <div style="font-size: 0.75em; font-weight: 600; color: #5b21b6;">ML Pipeline</div>
-                            <div style="font-size: 0.62em; color: #8b5cf6; margin-top: 2px;">See AI think live</div>
+                        <div style="margin-top: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: inline-block;">
+                            <div style="font-size: 0.65em; color: #10b981; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">AI Health Guide</div>
+                            <div style="font-size: 0.9em; color: #1e293b; font-weight: 700; margin-top: 2px;">Milo</div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Journey stages -->
-                <div style="margin-top: 32px; max-width: 600px;">
-                    <div style="font-size: 0.72em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Your Journey Stages</div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">
-                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; padding: 12px 16px;">
-                            <span style="background: #6366f1; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">1</span>
-                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🧠 Deep Analysis</div><div style="font-size: 0.65em; color: #64748b;">6-dimension NLP scan of your text</div></div>
+                    <!-- Right: Content -->
+                    <div>
+                        <h1 style="font-size: 2.4em; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.03em; line-height: 1.2;">
+                            Welcome to<br/><span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MindGuard</span>
+                        </h1>
+                        <p style="color: #475569; font-size: 1.05em; margin: 14px 0 0 0; line-height: 1.75; max-width: 440px;">
+                            An AI platform that <strong>analyzes your emotions</strong>, <strong>detects thinking patterns</strong>, and <strong>guides you through evidence-based therapy</strong> — powered by neural networks running in real-time.
+                        </p>
+
+                        <!-- Tech badges -->
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 18px;">
+                            <span style="background: #eef2ff; color: #4338ca; padding: 5px 10px; border-radius: 8px; font-size: 0.68em; font-weight: 600;">BERT</span>
+                            <span style="background: #ecfdf5; color: #065f46; padding: 5px 10px; border-radius: 8px; font-size: 0.68em; font-weight: 600;">FAISS</span>
+                            <span style="background: #fce7f3; color: #9d174d; padding: 5px 10px; border-radius: 8px; font-size: 0.68em; font-weight: 600;">LangChain RAG</span>
+                            <span style="background: #fef9c3; color: #854d0e; padding: 5px 10px; border-radius: 8px; font-size: 0.68em; font-weight: 600;">CBT</span>
+                            <span style="background: #f0f9ff; color: #0c4a6e; padding: 5px 10px; border-radius: 8px; font-size: 0.68em; font-weight: 600;">PHQ-9</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 12px; padding: 12px 16px;">
-                            <span style="background: #10b981; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">2</span>
-                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🎮 Emotion Challenge</div><div style="font-size: 0.65em; color: #64748b;">Test your EQ against the ML model</div></div>
+
+                        <!-- Journey Stages -->
+                        <div style="margin-top: 28px;">
+                            <div style="font-size: 0.7em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px;">Your Journey</div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(99,102,241,0.06); transition: all 0.2s;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75em; font-weight: 700; flex-shrink: 0;">1</div>
+                                    <div style="flex: 1;"><div style="font-size: 0.85em; font-weight: 600; color: #1e293b;">Deep Analysis</div><div style="font-size: 0.7em; color: #64748b;">6-dimension NLP scan • Classification • Emotion • Risk</div></div>
+                                    <span style="font-size: 1em;">🧠</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(16,185,129,0.06); transition: all 0.2s;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75em; font-weight: 700; flex-shrink: 0;">2</div>
+                                    <div style="flex: 1;"><div style="font-size: 0.85em; font-weight: 600; color: #1e293b;">Emotion Challenge</div><div style="font-size: 0.7em; color: #64748b;">Test your EQ against the ML model • 8 rounds</div></div>
+                                    <span style="font-size: 1em;">🎮</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(139,92,246,0.06); transition: all 0.2s;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75em; font-weight: 700; flex-shrink: 0;">3</div>
+                                    <div style="flex: 1;"><div style="font-size: 0.85em; font-weight: 600; color: #1e293b;">ML Pipeline Live</div><div style="font-size: 0.7em; color: #64748b;">Watch tokenization → embedding → FAISS → classify</div></div>
+                                    <span style="font-size: 1em;">🔬</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(245,158,11,0.06); transition: all 0.2s;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75em; font-weight: 700; flex-shrink: 0;">4</div>
+                                    <div style="flex: 1;"><div style="font-size: 0.85em; font-weight: 600; color: #1e293b;">Therapy Suite</div><div style="font-size: 0.7em; color: #64748b;">CBT chat • Reframer • Breathing • Journal • Check-in</div></div>
+                                    <span style="font-size: 1em;">💬</span>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; padding: 12px 16px;">
-                            <span style="background: #8b5cf6; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">3</span>
-                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">🔬 ML Pipeline</div><div style="font-size: 0.65em; color: #64748b;">Watch the neural network think live</div></div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15); border-radius: 12px; padding: 12px 16px;">
-                            <span style="background: #f59e0b; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold;">4</span>
-                            <div><div style="font-size: 0.8em; font-weight: 600; color: #1e293b;">💬 CBT Companion + Tools</div><div style="font-size: 0.65em; color: #64748b;">Chat, reframe, breathe, journal, track</div></div>
-                        </div>
+
+                        <p style="margin-top: 22px; font-size: 0.78em; color: #6366f1; font-weight: 500;">↑ Click the tabs above to begin your journey</p>
                     </div>
                 </div>
-
-                <p style="margin-top: 20px; font-size: 0.75em; color: #94a3b8;">Click the tabs above to start your journey →</p>
             </div>
             <style>
                 @keyframes particle-float {
-                    0%, 100% { transform: translateY(0) translateX(0); }
-                    25% { transform: translateY(-20px) translateX(10px); }
-                    50% { transform: translateY(-10px) translateX(-5px); }
-                    75% { transform: translateY(-25px) translateX(8px); }
+                    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+                    25% { transform: translateY(-25px) translateX(12px); opacity: 0.5; }
+                    50% { transform: translateY(-12px) translateX(-8px); opacity: 0.2; }
+                    75% { transform: translateY(-30px) translateX(10px); opacity: 0.4; }
                 }
             </style>
             """)
