@@ -2,6 +2,20 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './components/Sidebar'
 import Landing from './pages/Landing'
+import Analysis from './pages/Analysis'
+import EmotionChallenge from './pages/EmotionChallenge'
+import Pipeline from './pages/Pipeline'
+import Chat from './pages/Chat'
+import ThoughtReframer from './pages/ThoughtReframer'
+import PHQ9 from './pages/PHQ9'
+import GAD7 from './pages/GAD7'
+import DailyCheckin from './pages/DailyCheckin'
+import Breathing from './pages/Breathing'
+import Journal from './pages/Journal'
+import Rewards from './pages/Rewards'
+import Resources from './pages/Resources'
+import Analytics from './pages/Analytics'
+import HowItWorks from './pages/HowItWorks'
 
 const PAGE_TITLES = {
   home: 'Home',
@@ -26,24 +40,22 @@ export default function App() {
 
   const renderView = () => {
     switch (activeView) {
-      case 'home':
-        return <Landing onNavigate={setActiveView} />
-      default:
-        return (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🚧</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">{PAGE_TITLES[activeView]}</h2>
-              <p className="text-sm text-gray-500">This page is being built with the full design system.</p>
-              <button
-                onClick={() => setActiveView('home')}
-                className="mt-4 px-5 py-2 bg-brand-300 text-white rounded-pill text-sm font-medium hover:scale-[1.02] transition-all"
-              >
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
+      case 'home': return <Landing onNavigate={setActiveView} />
+      case 'analysis': return <Analysis />
+      case 'challenge': return <EmotionChallenge />
+      case 'pipeline': return <Pipeline />
+      case 'chat': return <Chat />
+      case 'reframe': return <ThoughtReframer />
+      case 'phq9': return <PHQ9 />
+      case 'gad7': return <GAD7 />
+      case 'checkin': return <DailyCheckin />
+      case 'breathing': return <Breathing />
+      case 'journal': return <Journal />
+      case 'rewards': return <Rewards />
+      case 'resources': return <Resources />
+      case 'analytics': return <Analytics />
+      case 'how': return <HowItWorks />
+      default: return <Landing onNavigate={setActiveView} />
     }
   }
 
