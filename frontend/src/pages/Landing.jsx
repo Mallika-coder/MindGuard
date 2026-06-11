@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Brain, Gamepad2, Microscope, MessageCircle, Shield } from 'lucide-react'
 
 const FEATURES = [
@@ -24,25 +25,60 @@ export default function Landing({ onNavigate }) {
         ))}
       </div>
 
-      {/* Milo character */}
+      {/* Dr. Milo character — large animated */}
       <motion.div
-        animate={{ y: [0, -8, 0] }}
+        animate={{ y: [0, -6, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        className="mb-6"
+        className="mb-4"
       >
-        <div className="w-28 h-28 bg-gradient-to-br from-brand-300 to-brand-400 rounded-full flex items-center justify-center shadow-2xl shadow-brand-300/30">
-          <svg width="64" height="64" viewBox="0 0 100 100">
-            <circle cx="40" cy="42" r="7" fill="white"/>
-            <circle cx="60" cy="42" r="7" fill="white"/>
-            <circle cx="41" cy="43" r="3.5" fill="#1a3d2e"/>
-            <circle cx="61" cy="43" r="3.5" fill="#1a3d2e"/>
-            <circle cx="43" cy="40" r="1.5" fill="white"/>
-            <circle cx="63" cy="40" r="1.5" fill="white"/>
-            <path d="M 36 58 Q 50 72 64 58" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
-            <circle cx="30" cy="52" r="5" fill="white" opacity="0.3"/>
-            <circle cx="70" cy="52" r="5" fill="white" opacity="0.3"/>
-          </svg>
-        </div>
+        <svg width="160" height="160" viewBox="0 0 200 200" style={{ filter: 'drop-shadow(0 12px 24px rgba(74, 157, 110, 0.2))' }}>
+          <defs>
+            <radialGradient id="face-light" cx="40%" cy="35%"><stop offset="0%" stopColor="#fde8d4"/><stop offset="100%" stopColor="#fcd5b4"/></radialGradient>
+          </defs>
+          {/* Hair */}
+          <ellipse cx="100" cy="72" rx="42" ry="44" fill="#2d1b0e"/>
+          <path d="M 62 55 Q 80 30 100 32 Q 120 30 138 55" fill="#2d1b0e"/>
+          <path d="M 58 72 Q 52 90 55 110" fill="#2d1b0e"/><path d="M 142 72 Q 148 90 145 110" fill="#2d1b0e"/>
+          {/* Face */}
+          <ellipse cx="100" cy="82" rx="34" ry="36" fill="url(#face-light)"/>
+          {/* Eyes */}
+          <ellipse cx="86" cy="82" rx="7" ry="8" fill="white"/><ellipse cx="114" cy="82" rx="7" ry="8" fill="white"/>
+          <circle cx="87" cy="83" r="4" fill="#2d5a3f"/><circle cx="115" cy="83" r="4" fill="#2d5a3f"/>
+          <circle cx="88.5" cy="81" r="1.5" fill="white"/><circle cx="116.5" cy="81" r="1.5" fill="white"/>
+          {/* Eyebrows */}
+          <path d="M 79 73 Q 86 69 93 72" fill="none" stroke="#3d2b1a" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M 107 72 Q 114 69 121 73" fill="none" stroke="#3d2b1a" strokeWidth="2" strokeLinecap="round"/>
+          {/* Smile */}
+          <path d="M 88 99 Q 100 110 112 99" fill="none" stroke="#c47a5a" strokeWidth="2.5" strokeLinecap="round"/>
+          {/* Blush */}
+          <circle cx="76" cy="94" r="6" fill="#ffb3b3" opacity="0.3"/><circle cx="124" cy="94" r="6" fill="#ffb3b3" opacity="0.3"/>
+          {/* Glasses */}
+          <circle cx="86" cy="82" r="10" fill="none" stroke="#64748b" strokeWidth="1.5" opacity="0.6"/>
+          <circle cx="114" cy="82" r="10" fill="none" stroke="#64748b" strokeWidth="1.5" opacity="0.6"/>
+          <path d="M 96 82 L 104 82" fill="none" stroke="#64748b" strokeWidth="1.5" opacity="0.6"/>
+          {/* Body */}
+          <path d="M 70 120 Q 70 115 80 112 L 100 110 L 120 112 Q 130 115 130 120 L 135 180 L 65 180 Z" fill="white" stroke="#e2e8f0" strokeWidth="1"/>
+          <path d="M 88 112 L 88 125 Q 100 130 112 125 L 112 112" fill="#4a9d6e"/>
+          {/* Stethoscope */}
+          <path d="M 92 118 Q 85 130 88 142" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round"/>
+          <circle cx="88" cy="144" r="4" fill="#94a3b8" stroke="#64748b" strokeWidth="1.5"/>
+          {/* Badge */}
+          <rect x="118" y="132" width="14" height="18" rx="3" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.8"/>
+          <text x="125" y="144" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">MG</text>
+        </svg>
+      </motion.div>
+
+      {/* Speech bubble from character */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5 }}
+        className="bg-white border border-brand-100 rounded-2xl px-5 py-3 mb-6 shadow-sm max-w-sm relative"
+      >
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-brand-100 rotate-45"/>
+        <p className="text-sm text-gray-600 text-center relative z-10">
+          "Hi! I'm <strong className="text-brand-400">Dr. Milo</strong> — your AI health companion. Let me guide you through your mental wellness journey!"
+        </p>
       </motion.div>
 
       {/* Title */}
