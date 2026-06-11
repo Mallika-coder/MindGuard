@@ -10,6 +10,166 @@ pinned: false
 license: mit
 ---
 
+# 🛡️ MindGuard — AI-Powered Mental Health Screening & Clinical Decision Support
+
+> Multi-dimensional NLP platform combining fine-tuned BERT, FAISS vector search, LangChain RAG, Plutchik emotion profiling, cognitive distortion detection, and validated clinical instruments — with a gamified React frontend, multilingual voice I/O, and a CBT-trained AI companion.
+
+**🌐 Live Demo:** [mind-guard-chi.vercel.app](https://mind-guard-chi.vercel.app)
+**🤖 ML Backend:** [huggingface.co/spaces/MallikaV/MindGuard](https://huggingface.co/spaces/MallikaV/MindGuard)
+**💻 GitHub:** [github.com/Mallika-coder/MindGuard](https://github.com/Mallika-coder/MindGuard)
+
+---
+
+## Problem
+
+Mental health disorders affect **1 in 4 people globally**, yet **75% never receive treatment**. Current digital tools are either too simplistic (single questionnaires) or clinically opaque (black-box predictions). MindGuard bridges this gap with a **transparent, multi-factor ML pipeline** that users can literally watch processing their text in real-time.
+
+---
+
+## Key Features (15 Interactive Pages)
+
+| # | Feature | ML/Tech Used |
+|---|---------|-------------|
+| 1 | **Deep Analysis** | 6-dimension NLP: BERT + Emotions + Distortions + Linguistics + Risk + RAG |
+| 2 | **Emotion Challenge** | Gamified ML education — guess the emotion, see AI's analysis |
+| 3 | **ML Pipeline Visualizer** | Watch tokenization → embedding → FAISS → classify live |
+| 4 | **CBT AI Companion** | LLM + NLP context + multilingual + voice I/O |
+| 5 | **Thought Reframer** | Cognitive distortion detection + automatic reframing (CBT) |
+| 6 | **PHQ-9** | Validated depression screening (Kroenke et al., 2001) |
+| 7 | **GAD-7** | Validated anxiety screening (Spitzer et al., 2006) |
+| 8 | **Daily Check-in** | 4-axis wellness tracking (mood/sleep/energy/social) |
+| 9 | **Breathing Exercise** | 4-7-8 technique + 5-4-3-2-1 grounding (animated) |
+| 10 | **Mood Journal** | NLP-analyzed entries with pattern detection |
+| 11 | **Rewards** | 12 badges, XP system, levels (gamification) |
+| 12 | **Resources** | 8 video+article cards, filterable by category |
+| 13 | **Analytics** | Recharts: mood trends + classification distribution |
+| 14 | **Voice I/O** | Speech-to-text + text-to-speech, auto language detection |
+| 15 | **Dr. Milo** | Animated AI guide character on every page |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────┐
+│    VERCEL (React Frontend)          │
+│    15 pages, Framer Motion,         │
+│    Voice I/O, Recharts              │
+└──────────────┬──────────────────────┘
+               │ API
+               ▼
+┌─────────────────────────────────────┐
+│    HUGGINGFACE SPACES (ML Backend)  │
+│                                     │
+│  Text → BERT Classifier (F1=0.87)  │
+│      → FAISS Vector Search (384d)  │
+│      → Plutchik Emotions (8-dim)   │
+│      → CBT Distortion Detector     │
+│      → Linguistic Biomarkers       │
+│      → Risk Scoring Engine         │
+│      → RAG Response Generator      │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Model Performance
+
+| Metric | Score |
+|--------|-------|
+| **F1 (macro)** | 0.87 |
+| **AUC-ROC** | 0.92 |
+| **Precision** | 0.89 |
+| **Recall** | 0.85 |
+| **Dataset** | 200K Reddit posts |
+| **Training** | BERT-base, 4 epochs, AdamW |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **ML Model** | PyTorch + Transformers (BERT-base-uncased) |
+| **Embeddings** | sentence-transformers/all-MiniLM-L6-v2 (384-dim) |
+| **Vector Store** | FAISS (IVF-Flat index) |
+| **RAG** | LangChain + HuggingFace Hub |
+| **Backend** | Gradio + FastAPI |
+| **Frontend** | React 18 + Vite + TailwindCSS + Framer Motion |
+| **Charts** | Recharts |
+| **Voice** | Web Speech API (input + output, multilingual) |
+| **Chatbot** | LLM API + CBT system prompt + NLP context |
+| **Clinical** | PHQ-9, GAD-7 (validated instruments) |
+| **Deployment** | Vercel (frontend) + HuggingFace Spaces (ML) |
+
+---
+
+## Quick Start
+
+### Frontend (React)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### ML Backend (Gradio)
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+### Train the Model
+```bash
+cd model
+python train.py
+```
+
+---
+
+## Voice System
+
+- **Input:** Web Speech API — speak in any language, real-time transcription
+- **Output:** Auto-detects language (Hindi, English, Spanish, etc.) → picks matching voice
+- **Detection:** Devanagari script, romanized Hindi words, Arabic, CJK, European scripts
+- **Tone:** Rate 0.92, pitch 1.05, volume 0.85 (calm, soft, non-jarring)
+
+---
+
+## Dataset
+
+**Reddit Mental Health** — ~200K posts from:
+`r/depression` · `r/anxiety` · `r/stress` · `r/SuicideWatch` · `r/CasualConversation`
+
+**5 Classes:** Normal, Stress, Anxiety, Depression, Severe
+**Training:** 4 epochs, AdamW (lr=2e-5), warmup 10%, gradient clipping 1.0
+
+---
+
+## Risk Scoring Algorithm
+
+```
+Risk = 0.40 × Keyword Severity
+     + 0.25 × Emotional Distress (Plutchik)
+     + 0.20 × Cognitive Distortion Count
+     + 0.15 × Linguistic Biomarkers
+
+Biomarkers: self-reference ratio, negation density,
+lexical diversity, certainty language (Rude et al. 2004, Pennebaker 2011)
+```
+
+---
+
+## License
+
+MIT — For educational and research purposes.
+
+---
+
+**Built by Mallika Verma**
+
+⚠️ *MindGuard is NOT a medical device. If in crisis, call 988 or text HOME to 741741.*
+
 # MindGuard — AI-Powered Mental Health Screening & Clinical Decision Support Platform
 
 > Multi-dimensional NLP analysis combining fine-tuned BERT classification, Plutchik emotion modeling, cognitive distortion detection, and RAG-enhanced clinical responses — with validated PHQ-9 and GAD-7 instruments for standardized screening.
