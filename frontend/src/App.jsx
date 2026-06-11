@@ -1,88 +1,79 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import ScreeningPanel from './components/ScreeningPanel'
-import ChatPanel from './components/ChatPanel'
-import ResultsPanel from './components/ResultsPanel'
-import { Brain, MessageCircle, Shield } from 'lucide-react'
+import Sidebar from './components/Sidebar'
+import Landing from './pages/Landing'
+
+const PAGE_TITLES = {
+  home: 'Home',
+  analysis: 'Deep Analysis',
+  challenge: 'Emotion Challenge',
+  pipeline: 'ML Pipeline',
+  chat: 'AI Companion',
+  reframe: 'Thought Reframer',
+  phq9: 'PHQ-9 Depression Screen',
+  gad7: 'GAD-7 Anxiety Screen',
+  checkin: 'Daily Check-in',
+  breathing: 'Breathing Exercise',
+  journal: 'Mood Journal',
+  rewards: 'Rewards',
+  resources: 'Resources',
+  analytics: 'Analytics',
+  how: 'How It Works',
+}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('screen')
-  const [screeningResult, setScreeningResult] = useState(null)
+  const [activeView, setActiveView] = useState('home')
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">MindGuard</h1>
-              <p className="text-xs text-gray-500">AI Mental Health Screening</p>
+  const renderView = () => {
+    switch (activeView) {
+      case 'home':
+        return <Landing onNavigate={setActiveView} />
+      default:
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🚧</div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">{PAGE_TITLES[activeView]}</h2>
+              <p className="text-sm text-gray-500">This page is being built with the full design system.</p>
+              <button
+                onClick={() => setActiveView('home')}
+                className="mt-4 px-5 py-2 bg-brand-300 text-white rounded-pill text-sm font-medium hover:scale-[1.02] transition-all"
+              >
+                Back to Home
+              </button>
             </div>
           </div>
-          <nav className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('screen')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'screen'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Brain className="w-4 h-4 inline mr-1.5" />
-              Screen
-            </button>
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'chat'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <MessageCircle className="w-4 h-4 inline mr-1.5" />
-              Chat
-            </button>
-          </nav>
-        </div>
-      </header>
+        )
+    }
+  }
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar activeView={activeView} onNavigate={setActiveView} />
+      <main className="flex-1 ml-64 p-8 relative">
+        {/* Page header */}
+        {activeView !== 'home' && (
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">{PAGE_TITLES[activeView]}</h1>
+            <p className="text-sm text-gray-500 mt-1">MindGuard AI Platform</p>
+          </div>
+        )}
         <AnimatePresence mode="wait">
-          {activeTab === 'screen' && (
-            <motion.div
-              key="screen"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-            >
-              <ScreeningPanel onResult={setScreeningResult} />
-              <ResultsPanel result={screeningResult} />
-            </motion.div>
-          )}
-          {activeTab === 'chat' && (
-            <motion.div
-              key="chat"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <ChatPanel />
-            </motion.div>
-          )}
+          <motion.div
+            key={activeView}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+          >
+            {renderView()}
+          </motion.div>
         </AnimatePresence>
 
         {/* Disclaimer */}
-        <div className="mt-12 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-sm text-yellow-800">
-            <strong>Disclaimer:</strong> MindGuard is an AI screening tool for educational purposes.
-            It is NOT a substitute for professional medical advice, diagnosis, or treatment.
-            If you're in crisis, please call <strong>988</strong> (Suicide & Crisis Lifeline).
+        <div className="mt-12 p-3 bg-amber-50 border border-amber-200 rounded-input text-center">
+          <p className="text-[11px] text-amber-800">
+            ⚠️ MindGuard is an educational AI tool, NOT medical advice. In crisis, call <strong>988</strong> or text HOME to 741741.
           </p>
         </div>
       </main>
