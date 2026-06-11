@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Loader2, RotateCcw } from 'lucide-react'
 import MiloGuide from '../components/MiloGuide'
+import { VoiceInputButton } from '../components/VoiceButton'
+import { useVoiceInput, speak } from '../hooks/useVoice'
 import { classifyText, analyzeEmotions, detectDistortions, computeLinguistics, computeRisk } from '../utils/wellness'
 
 function RiskGauge({ score, level }) {
@@ -40,6 +42,7 @@ export default function Analysis() {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const { isListening, startListening, stopListening } = useVoiceInput()
 
   const analyze = () => {
     if (text.trim().length < 10) return
@@ -52,6 +55,7 @@ export default function Analysis() {
       const risk = computeRisk(classification, emotions, distortions, linguistics)
       setResult({ classification, emotions, distortions, linguistics, risk })
       setLoading(false)
+      speak(`Analysis complete. I detected ${classification.label} with ${Math.round(classification.confidence * 100)} percent confidence. Your risk level is ${risk.level}.${distortions.length > 0 ? ` I also noticed ${distortions.length} cognitive distortion${distortions.length > 1 ? 's' : ''}.` : ''}`)
     }, 800)
   }
 
@@ -70,11 +74,33 @@ export default function Analysis() {
 
       {/* Input */}
       <div className="bg-white border border-border rounded-card p-5 mb-6">
-        <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
-          placeholder="Write about how you've been feeling lately..."
-          className="w-full resize-none border border-gray-200 rounded-input p-4 text-sm focus:ring-2 focus:ring-brand-300 focus:border-transparent outline-none"/>
+        <div className="relative">
+          <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
+            placeholder="Write or speak about how you've been feeling lately..."
+            className="w-full resize-none border border-gray-200 rounded-input p-4 pr-14 text-sm focus:ring-2 focus:ring-brand-300 focus:border-transparent outline-none"/>
+          {/* Voice input button inside textarea */}
+          <div className="absolute right-3 top-3">
+            <VoiceInputButton
+              isListening={isListening}
+              onStart={() => startListening((t) => setText(t))}
+              onStop={stopListening}
+            />
+          </div>
+        </div>
+        {isListening && (
+          <div className="flex items-center gap-2 mt-2 px-2">
+            <div className="flex gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <motion.div key={i} className="w-1 bg-red-400 rounded-full"
+                  animate={{ height: [8, 16, 8] }}
+                  transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}/>
+              ))}
+            </div>
+            <span className="text-xs text-red-500 font-medium">Listening... speak now</span>
+          </div>
+        )}
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-gray-400">{text.length} characters</span>
+          <span className="text-xs text-gray-400">{text.length} characters {isListening && '• 🎙️ Voice active'}</span>
           <div className="flex gap-2">
             <button onClick={() => { setText(''); setResult(null) }} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
               <RotateCcw className="w-4 h-4 inline mr-1"/>Clear

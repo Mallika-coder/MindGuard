@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Send, Loader2, Sparkles, User } from 'lucide-react'
+import { Send, Loader2, Sparkles, User, Mic, MicOff, Volume2 } from 'lucide-react'
+import { useVoiceInput, speak } from '../hooks/useVoice'
 import { classifyText, analyzeEmotions, detectDistortions } from '../utils/wellness'
 
 const CBT_RESPONSES = {
@@ -70,8 +71,13 @@ export default function Chat() {
 
       setMessages(prev => [...prev, { role: 'ai', text: response }])
       setLoading(false)
+      // Speak the response (clean text without markdown)
+      const cleanResponse = response.split('---')[0].replace(/[*_#🧠🔍💭🆘✨]/g, '').trim()
+      speak(cleanResponse)
     }, 1200)
   }
+
+  const { isListening, startListening, stopListening } = useVoiceInput()
 
   return (
     <div className="bg-white border border-border rounded-card overflow-hidden max-w-3xl mx-auto">
@@ -137,10 +143,30 @@ export default function Chat() {
 
       {/* Input */}
       <div className="p-3 border-t border-border bg-white">
+        {isListening && (
+          <div className="flex items-center gap-2 mb-2 px-2">
+            <div className="flex gap-0.5">
+              {[...Array(4)].map((_, i) => (
+                <motion.div key={i} className="w-1 bg-red-400 rounded-full"
+                  animate={{ height: [6, 14, 6] }}
+                  transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.1 }}/>
+              ))}
+            </div>
+            <span className="text-[10px] text-red-500 font-medium">Listening...</span>
+          </div>
+        )}
         <div className="flex gap-2">
+          {/* Mic button */}
+          <button
+            onClick={isListening ? stopListening : () => startListening((t) => setInput(t))}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+              isListening ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-gray-100 text-gray-400 hover:bg-brand-50 hover:text-brand-400'
+            }`}>
+            {isListening ? <MicOff className="w-4 h-4"/> : <Mic className="w-4 h-4"/>}
+          </button>
           <input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            placeholder="Type your thoughts..."
+            placeholder={isListening ? "Listening... speak now" : "Type or speak your thoughts..."}
             className="flex-1 px-4 py-2.5 bg-gray-50 border border-border rounded-full text-sm focus:ring-2 focus:ring-brand-300 focus:border-transparent outline-none"/>
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
             className="w-10 h-10 bg-brand-300 rounded-full flex items-center justify-center text-white hover:scale-105 transition-all shadow-md shadow-brand-300/20 disabled:opacity-50">
